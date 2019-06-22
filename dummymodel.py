@@ -12,7 +12,7 @@ X_test_data = QuestionAnswerPairs['Question']
 y_test = QuestionAnswerPairs['Answer']
 
 Vectorizer = CountVectorizer(max_features=100, stop_words='english')
-BagOfWords = Vectorizer.fit(X_train)
+BagOfWords = Vectorizer.fit(X_train_data)
 X_train = BagOfWords.transform(X_train_data)
 X_test = BagOfWords.transform(X_test_data)
 
