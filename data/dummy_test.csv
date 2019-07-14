@@ -1,6 +1,5 @@
 Question,Answer
-Which colour is a London bus?,London buses are red
-What colour are the taxis in London ?,London taxis are black
-In New York What colour are the taxis?,New York taxis are Yellow
-Bournemouth taxis are what colour?,Bournemouth taxis are Pink
-What colours are the UK flag?,"The Union Jack is Red, Blue and White"
+Tell me the weight of the frames on order x,windowFrameWeight
+"I can't open project x, could you take a look for me?",projectInvalidated
+The documents are taking forever to generate,documentGeneration
+I can't seem to login with my password; can you check for me please?,loginFailed

@@ -1,26 +1,61 @@
 Question,Answer
-What colour are London buses?,London buses are red
-When I go to London what colour bus will I see?,London buses are red
-Are London buses red?,London buses are red
-Are London buses blue?,London buses are red
-What colour is a London bus?,London buses are red
-What colour are London taxis?,London taxis are black
-When I go to London what colour taxi will I see?,London taxis are black
-Are London taxis black?,London taxis are black
-Are London taxis yellow?,London taxis are black
-What colour is a London taxi?,London taxis are black
-What colour are New York taxis?,New York taxis are Yellow
-When I go to New York what colour taxi will I see?,New York taxis are Yellow
-Are New York taxis yellow?,New York taxis are Yellow
-Are New York taxis blue?,New York taxis are Yellow
-What colour is a New York taxi?,New York taxis are Yellow
-What colour are Bournemouth taxis?,Bournemouth taxis are Pink
-When I go to Bournemouth what colour taxi will I see?,Bournemouth taxis are Pink
-Are Bournemouth taxis Pink?,Bournemouth taxis are Pink
-Are Bournemouth taxis red?,Bournemouth taxis are Pink
-What colour is a Bournemouth taxi?,Bournemouth taxis are Pink
-What colour are UK flags?,"The Union Jack is Red, Blue and White"
-When I go to the UK what colour flags will I see?,"The Union Jack is Red, Blue and White"
-Are UK flags red?,"The Union Jack is Red, Blue and White"
-Are UK flags black?,"The Union Jack is Red, Blue and White"
-What colour is the UK flag?,"The Union Jack is Red, Blue and White"
+Can you tell me the frame weight of order x,windowFrameWeight
+I'd like to know the frame weight of the windows in order x,windowFrameWeight
+I need to know how much the window frames weigh on order x,windowFrameWeight
+There a window on order x that I'd like to know the frame weight for,windowFrameWeight
+I just want to check the frame weight of the window on order x,windowFrameWeight
+I'm really struggling to access project x,projectInvalidated
+the customer cannot open project x,projectInvalidated
+OSS errors every time I try to open project x,projectInvalidated
+Project x keeps erroring whenever I try to open it,projectInvalidated
+I can't open project x,projectInvalidated
+I started generating the documents x minutes ago but they've still not downloaded,documentGeneration
+the document generation wheel just keeps going round,documentGeneration
+I can't download the documents even after y hours,documentGeneration
+I started the document generation yesterday but it's not finished yet,documentGeneration
+Can you generate the documents on projectID x for me please?,documentGeneration
+"The customer is really struggling to login, can you check the credentials?",loginFailed
+"I can't login with my credentials, could you take a look please?",loginFailed
+My username and password don't seem to work,loginFailed
+Why is it that i can't login to OSS?,loginFailed
+Could you test my user credentials please?,loginFailed
+Can you let me know the frame weight of order x please,windowFrameWeight
+I'd like to know the weight of the window frames in order x,windowFrameWeight
+I need to know how much each of the window frames weigh on order x,windowFrameWeight
+There's a window on order x that I need to get the frame weight for,windowFrameWeight
+I just want to find out the weight of the window frame on order x,windowFrameWeight
+I'm really struggling to get access to project x,projectInvalidated
+the customer cannot open project x on OSS,projectInvalidated
+OSS errors every time I try to open project x on OSS,projectInvalidated
+Project x gives an error whenever I try to open it,projectInvalidated
+I can't open project x when i do there's an error,projectInvalidated
+I started downloading the documents x hours ago but they've still not downloaded,documentGeneration
+the document generation wheel just keeps spinning,documentGeneration
+I can't download the quote even after y hours,documentGeneration
+I started the document generation yesterday but it's not finished even now,documentGeneration
+Could you re-generate the documents on projectID x for me please?,documentGeneration
+"The customer is really struggling to get onto OSS, can you check the credentials?",loginFailed
+"I can't login with my password, can you take a look please?",loginFailed
+My username and password aren't working on OSS,loginFailed
+Why is it that i can't get onto to OSS?,loginFailed
+Could you test my user credentials for me please?,loginFailed
+Can you send me the frame weight of order x please,windowFrameWeight
+I'd like to get the overall weight of the window frames in order x,windowFrameWeight
+I need to find out how much each of the window frames weigh on order x,windowFrameWeight
+There's a window on order x that I really urgently need to get the frame weight for,windowFrameWeight
+The customer wants to know the weight of the window frame on order x,windowFrameWeight
+I can't seem to get access to project x,projectInvalidated
+the customer cannot open project x on OSS they've tried a bunch of times.,projectInvalidated
+OSS gives an error message every time I try to open the project on OSS,projectInvalidated
+Project x shows a red error message whenever I try to open it,projectInvalidated
+I can't seem to open project x when i do there's an error,projectInvalidated
+The documents are taking a very long time to download,documentGeneration
+The document generation won't download,documentGeneration
+I can't opoen the quote even after x hours,documentGeneration
+the document generation seems to be taking forever,documentGeneration
+Could you fix the documents on projectID x for me please?,documentGeneration
+"The customer is not able to get onto OSS with their login, can you check the credentials?",loginFailed
+"I can you take a look at my OSS loing please?",loginFailed
+My username and password aren't letting me get onto OSS,loginFailed
+Why can't get onto to OSS with my username and password?,loginFailed
+Could you check the customer's login details for me please?,loginFailed
