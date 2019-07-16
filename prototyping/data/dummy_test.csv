@@ -1,0 +1,5 @@
+Question,Answer
+Tell me the weight of the frames on order x,windowFrameWeight
+"I can't open project x, could you take a look for me?",projectInvalidated
+The documents are taking forever to generate,documentGeneration
+I can't seem to login with my password; can you check for me please?,loginFailed
