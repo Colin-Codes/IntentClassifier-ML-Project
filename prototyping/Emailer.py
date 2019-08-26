@@ -51,7 +51,7 @@ for messageID in messageIDs:
 
         msg = email.message.EmailMessage()
         msg['from'] = 'hal9000.origin@gmail.com'
-        msg["to"] = 'colin.younge@origin-global.com'
+        msg["to"] = fromAddress
         msg["Subject"] = "Re: " + subject
-        msg.set_content(text + "\n\n" + body)
+        msg.set_content(text + "\n\n ------------------------------------------------------- \n\nYour original message: \n\n" + body)
         res = s.send_message(msg)
