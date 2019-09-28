@@ -11,7 +11,7 @@ X = ClassEmailPairs['Email']
 y = ClassEmailPairs['Class']
 
 #Create the word embedding
-Vectorizer = CountVectorizer(max_features=100, stop_words='english')
+Vectorizer = CountVectorizer(stop_words='english')
 BagOfWords = Vectorizer.fit(X)
 X_train = BagOfWords.transform(X)
 
@@ -21,11 +21,20 @@ intents = ClassEmailPairs['Class'].unique()
 print(intents)
 
 #Score the model
-scores = []
-for i in range(1,25):
-    model = KNeighborsClassifier(n_neighbors=i)
-    CVScores = cross_val_score(model, X_train, y, cv=25)
-    scores.append(CVScores.mean())
+# scores = []
+# for i in range(1,25):
+#     model = KNeighborsClassifier(n_neighbors=i)
+#     CVScores = cross_val_score(model, X_train, y, cv=25)
+#     scores.append(CVScores.mean())
 
-plt.scatter(range(1,25), scores)
-plt.show()
+# plt.scatter(range(1,25), scores)
+# plt.show()
+
+
+ClassEmailPairs = pd.read_csv('data/testset.csv', sep=',', engine='python', quotechar='"')
+X_test = ClassEmailPairs['Email']
+model = KNeighborsClassifier(n_neighbors=10)
+model.fit(X_train, y)
+X_test = BagOfWords.transform(X_test)
+y_pred = model.predict(X_test)
+print(y_pred)
