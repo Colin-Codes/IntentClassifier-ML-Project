@@ -23,10 +23,10 @@ for i in range(15,16):
     RNN.add(Dense(outputs, activation='sigmoid'))
     RNN.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-    epochs = 15
+    epochs = 5
     batch_size = 1
 
     RNN.fit(X, y, epochs=epochs, batch_size=batch_size, validation_split=0)
-    predictions = RNN.predict(data.npX_test())
-    print(predictions)
+    predictions = RNN.predict(np.array(D3Index(data.X_test)))
+    #print(predictions)
     print(data.decodePredictions(predictions))

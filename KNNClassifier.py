@@ -18,13 +18,11 @@ X_train = BagOfWords.transform(X)
 #List of unique intentions
 intents = ClassEmailPairs['Class'].unique()
 
-print(intents)
-
 #Score the model
 # scores = []
 # for i in range(1,25):
 #     model = KNeighborsClassifier(n_neighbors=i)
-#     CVScores = cross_val_score(model, X_train, y, cv=25)
+#     CVScores = cross_val_score(model, X_train, y, cv=50)
 #     scores.append(CVScores.mean())
 
 # plt.scatter(range(1,25), scores)
@@ -33,7 +31,7 @@ print(intents)
 
 ClassEmailPairs = pd.read_csv('data/testset.csv', sep=',', engine='python', quotechar='"')
 X_test = ClassEmailPairs['Email']
-model = KNeighborsClassifier(n_neighbors=10)
+model = KNeighborsClassifier(n_neighbors=8)
 model.fit(X_train, y)
 X_test = BagOfWords.transform(X_test)
 y_pred = model.predict(X_test)
