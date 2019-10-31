@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import csv
 import itertools
 
@@ -7,6 +8,9 @@ from keras.utils import to_categorical
 class Indexed:
     def __init__(self, TrainCSVpath, TestCSVPath, inputLength):
         self.inputLength = inputLength
+
+        #Get shuffled data
+        self.df = pd.read_csv(TrainCSVpath).sample(frac=1)
 
         # Import data
         with open(TrainCSVpath, "r") as importTrainCSV:
@@ -46,6 +50,16 @@ class Indexed:
     def splitSentence(self, sentence):
         return [word.lower() for word in sentence[0].split(' ')]
 
+    def decodeExamples(self, examples):
+        examples = [self.joinSentence(self.decodeSentence(example)) for example in examples]
+        return examples
+
+    def decodeSentence(self, sentence):
+        return [self.int2word[word] if word != 0 else '---' for word in sentence ]
+
+    def joinSentence(self, sentence):
+        return " ".join(sentence)
+
     def decodePredictions(self, predictions):
         return [self.decodePrediction(prediction) for prediction in predictions]
 
@@ -60,9 +74,23 @@ class Indexed:
 
     def npy(self):
         return np.array(self.y, dtype='int32')
+
+    def Xdataset(self):
+        return self.X
+
+    def Xdataset_test(self):
+        return self.X_test
+
+    def ydataset(self):
+        return self.y
     
     def vocabSize(self):
         return len(self.word2int)
 
     def targetSize(self):
         return len(self.target2int)
+
+    def classDistribution(self):
+        dist = self.df.groupby('Class').size()
+        dist.sort_values(ascending=False, inplace=True)
+        return dist
