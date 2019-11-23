@@ -8,17 +8,17 @@ import itertools
 from keras.utils import to_categorical
 
 class Data:
-    def __init__(self, TrainCSVpath, TestCSVPath, inputLength, shuffle=True):
-        self.inputLength = inputLength
+    def __init__(self, _TrainCSVpath, _TestCSVPath, _inputLength, _shuffle=True):
+        self.inputLength = _inputLength
 
-        if inputLength < 0:
+        if _inputLength < 0:
             # Shallow models
-            if shuffle == True:
-                self.df = pd.read_csv(TrainCSVpath).sample(frac=1)
-                self.df_test = pd.read_csv(TrainCSVpath).sample(frac=1)
+            if _shuffle == True:
+                self.df = pd.read_csv(_TrainCSVpath).sample(frac=1)
+                self.df_test = pd.read_csv(_TestCSVPath).sample(frac=1)
             else:
-                self.df = pd.read_csv(TrainCSVpath)
-                self.df_test = pd.read_csv(TrainCSVpath)
+                self.df = pd.read_csv(_TrainCSVpath)
+                self.df_test = pd.read_csv(_TestCSVPath)
             
             # Create the word embedding
             Vectorizer = CountVectorizer(stop_words='english')
@@ -27,13 +27,13 @@ class Data:
             self.X_test_BoW = BagOfWords.transform(self.df_test['Email'])
             
         # Deep models
-        with open(TrainCSVpath, "r") as importTrainCSV:
+        with open(_TrainCSVpath, "r") as importTrainCSV:
             self.trainSamples = [i for i in list(csv.reader(importTrainCSV))[1:]]
-        with open(TestCSVPath, "r") as importTestCSV:
+        with open(_TestCSVPath, "r") as importTestCSV:
             self.testSamples = [i for i in list(csv.reader(importTestCSV))[1:]]
 
         # Shuffle
-        if shuffle == True:
+        if _shuffle == True:
             random.shuffle(self.trainSamples)
             random.shuffle(self.testSamples)
         
@@ -71,7 +71,7 @@ class Data:
         return np.array(examples)
 
     def encodeSentence(self, sentence):
-        return [self.word2int.get(word,-1) for word in self.splitSentence(sentence)]
+        return [self.word2int.get(word,0) for word in self.splitSentence(sentence)]
 
     def splitSentence(self, sentence):
         return [word.lower() for word in sentence[0].split(' ')]

@@ -4,6 +4,8 @@ import numpy as np
 from sklearn.model_selection import StratifiedKFold, cross_val_score
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
 from keras.models import Sequential
 from keras.layers import Dense, Embedding, SimpleRNN, LSTM, GRU
 from dataHelper import Data
@@ -29,11 +31,15 @@ def trainDeepModel(modelType, split, embeddedDims, epochs, batchSize, sentenceSi
     y = data.npy()
     
     if split > 1:
-        split = StratifiedKFold(n_splits=split, shuffle=False, random_state=1)
-        for iTrain, iVal in split.split(X, data.decodePredictions(y)):
+        stratSplit = StratifiedKFold(n_splits=split, shuffle=False, random_state=1)
+        for iTrain, iVal in stratSplit.split(X, data.decodePredictions(y)):
             model = buildDeepModel(modelType, embeddedDims, data.vocabSize(), sentenceSize, data.targetSize())
             model.fit(X[iTrain], y[iTrain], validation_data=(X[iVal], y[iVal]), epochs=epochs, batch_size=batchSize)
             models.append([model, data])
+    elif split == 1:
+        model = buildDeepModel(modelType, embeddedDims, data.vocabSize(), sentenceSize, data.targetSize())
+        model.fit(X, y, epochs=epochs, batch_size=batchSize)
+        models.append([model, data])
     else:
         model = buildDeepModel(modelType, embeddedDims, data.vocabSize(), sentenceSize, data.targetSize())
         model.fit(X, y, validation_split=split, epochs=epochs, batch_size=batchSize)
@@ -46,17 +52,24 @@ def buildShallowModel(modelType, k):
         model = KNeighborsClassifier(n_neighbors=k)
     return model
 
-def trainShallowModel(modelType, split, k, trainFilePath, testFilePath):
+def trainShallowModel(modelType, _split, _k, _trainFilePath, _testFilePath):
 
-    data = Data(trainFilePath,testFilePath, -1)
+    data = Data(_trainFilePath,_testFilePath, -1)
     X_BoW = data.x_BagOfWords()
     y = data.y_labels()
 
     # Model creation and validation
-    model = buildShallowModel(modelType, k)
-    if split > 1:
-        folds = StratifiedKFold(n_splits=split, shuffle=True, random_state=1)
+    model = buildShallowModel(modelType, _k)
+    if _split > 1:
+        folds = StratifiedKFold(n_splits=_split, shuffle=True, random_state=1)
         print(cross_val_score(model, X_BoW, y, cv=folds, verbose=10))
-    model.fit(X_BoW, y)
+    elif _split == 1:
+        model.fit(X_BoW, y)
+    else:
+        X_train, X_val, y_train, y_val = train_test_split(X_BoW, y, test_size=_split, random_state=1)
+        model.fit(X_train, y_train)
+        y_pred = model.predict(X_val)
+        print('Validation accuracy: ' + str(accuracy_score(y_val, y_pred)))
 
+    model.fit(X_BoW, y)
     return [model, data]
