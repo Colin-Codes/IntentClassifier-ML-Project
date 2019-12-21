@@ -52,24 +52,27 @@ def buildShallowModel(modelType, k):
         model = KNeighborsClassifier(n_neighbors=k)
     return model
 
-def trainShallowModel(modelType, _split, _k, _trainFilePath, _testFilePath):
+def trainShallowModel(modelType, _split, _k, _trainFilePath, _testFilePath, _embeddingMode):
 
     data = Data(_trainFilePath,_testFilePath, -1)
-    X_BoW = data.x_BagOfWords()
+    if _embeddingMode == "BoW":
+        X = data.x_BagOfWords()
+    else:    
+        X = data.x_TFIDF()
     y = data.y_labels()
 
     # Model creation and validation
     model = buildShallowModel(modelType, _k)
     if _split > 1:
         folds = StratifiedKFold(n_splits=_split, shuffle=True, random_state=1)
-        print(cross_val_score(model, X_BoW, y, cv=folds, verbose=10))
+        print(cross_val_score(model, X, y, cv=folds, verbose=10))
     elif _split == 1:
-        model.fit(X_BoW, y)
+        model.fit(X, y)
     else:
-        X_train, X_val, y_train, y_val = train_test_split(X_BoW, y, test_size=_split, random_state=1)
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=_split, random_state=1)
         model.fit(X_train, y_train)
         y_pred = model.predict(X_val)
         print('Validation accuracy: ' + str(accuracy_score(y_val, y_pred)))
 
-    model.fit(X_BoW, y)
+    model.fit(X, y)
     return [model, data]

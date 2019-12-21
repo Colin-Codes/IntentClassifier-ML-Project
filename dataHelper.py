@@ -1,4 +1,4 @@
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
 import numpy as np
 import pandas as pd
 import random
@@ -11,20 +11,27 @@ class Data:
     def __init__(self, _TrainCSVpath, _TestCSVPath, _inputLength, _shuffle=True):
         self.inputLength = _inputLength
 
+        if _shuffle == True:
+            self.df = pd.read_csv(_TrainCSVpath).sample(frac=1)
+            self.df_test = pd.read_csv(_TestCSVPath).sample(frac=1)
+        else:
+            self.df = pd.read_csv(_TrainCSVpath)
+            self.df_test = pd.read_csv(_TestCSVPath)            
+
+        # Shallow models
         if _inputLength < 0:
-            # Shallow models
-            if _shuffle == True:
-                self.df = pd.read_csv(_TrainCSVpath).sample(frac=1)
-                self.df_test = pd.read_csv(_TestCSVPath).sample(frac=1)
-            else:
-                self.df = pd.read_csv(_TrainCSVpath)
-                self.df_test = pd.read_csv(_TestCSVPath)
-            
-            # Create the word embedding
-            Vectorizer = CountVectorizer(stop_words='english')
-            BagOfWords = Vectorizer.fit(self.df['Email'])
+
+            # Create the BoW embedding
+            BoWModel = CountVectorizer(stop_words='english')
+            BagOfWords = BoWModel.fit(self.df['Email'])
             self.X_BoW = BagOfWords.transform(self.df['Email'])
             self.X_test_BoW = BagOfWords.transform(self.df_test['Email'])
+
+            # Create the TFIDF embedding
+            TFIDFModel = TfidfVectorizer(stop_words='english')
+            TFIDF = TFIDFModel.fit(self.df['Email'])
+            self.X_TFIDF = TFIDF.transform(self.df['Email'])
+            self.X_test_TFIDF = TFIDF.transform(self.df_test['Email'])
             
         # Deep models
         with open(_TrainCSVpath, "r") as importTrainCSV:
@@ -116,12 +123,24 @@ class Data:
         
     def pdDataFrame_test(self):
         return self.df_test
+
+    def Xtext(self):
+        return self.df['Email']
+
+    def Xtext_test(self):
+        return self.df_test['Email']
     
     def x_BagOfWords(self):
         return self.X_BoW
     
     def x_test_BagOfWords(self):
         return self.X_test_BoW
+    
+    def x_TFIDF(self):
+        return self.X_TFIDF
+    
+    def x_test_TFIDF(self):
+        return self.X_test_TFIDF
     
     def y_labels(self):
         return self.df['Class']
