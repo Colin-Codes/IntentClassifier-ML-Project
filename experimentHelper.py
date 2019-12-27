@@ -13,9 +13,9 @@ class Experiments:
     def run(self):
         for Parameters in self.experiments:
             if Parameters.modelType == "KNN":
-                self.models.append(trainShallowModel(Parameters.modelType, Parameters.kFolds, Parameters.nNeighbours, Parameters.trainFilePath, Parameters.testFilePath, Parameters.embeddingMode))
+                self.models.append(trainShallowModel(Parameters.modelType, Parameters.kFolds, Parameters.nNeighbours, Parameters.embeddingMode, Parameters.shuffleData, Parameters.randomSeed, Parameters.trainFilePath, Parameters.testFilePath))
             else:
-                self.models.append(trainDeepModel(Parameters.modelType, Parameters.kFolds, Parameters.embeddedDims, Parameters.epochs, Parameters.batchSize, Parameters.sentenceSize, Parameters.trainFilePath, Parameters.testFilePath))
+                self.models.append(trainDeepModel(Parameters.modelType, Parameters.kFolds, Parameters.embeddedDims, Parameters.epochs, Parameters.batchSize, Parameters.sentenceSize, Parameters.shuffleData, Parameters.randomSeed, Parameters.trainFilePath, Parameters.testFilePath))
 
     def evaluate(self):
         # Evaluation
@@ -37,11 +37,16 @@ class Experiments:
             print('Accuracy Score:')
             print(accuracy_score(y, y_pred))
 
-    def printResults(self, outputFileName):
+    def printResults(self, outputFileName=''):
         # Evaluation
         for modelData in self.models:
             model = modelData[0]
             data = modelData[1]
+            if outputFileName == '':            
+                if model.modelType == 'KNN':
+                    outputFileName = 'results/' + model.modelType + '_' + model.kFolds + '_' + model.nNeighbours + '_' + model.embeddingMode + '.csv'
+                else:
+                    outputFileName = 'results/' + model.modelType + '_' + model.kFolds + '_' + model.embeddedDims + '_' + model.epochs + '_' + model.batchSize + '_' + model.sentenceSize + '.csv'
             if data.modelType() == "Shallow":
                 y_pred = model.predict(data.x_test_BagOfWords())
                 y = data.y_test_labels()
@@ -53,7 +58,7 @@ class Experiments:
             trainingSet.to_csv(outputFileName, index = None, header=True)
 
 class Experiment:
-    def __init__(self, _modelType, _kFolds=5, _nNeighbours=5,_embeddingMode='BoW', _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=20, _trainFilePath='data/trainingset_augmented.csv', _testFilePath='data/testset.csv'):
+    def __init__(self, _modelType, _kFolds=5, _nNeighbours=5,_embeddingMode='BoW', _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=20, _shuffleData=False, _randomSeed=42, _trainFilePath='data/trainingset_augmented.csv', _testFilePath='data/testset.csv'):
         self.modelType = _modelType
         self.kFolds = _kFolds
         self.nNeighbours = _nNeighbours
@@ -64,3 +69,5 @@ class Experiment:
         self.sentenceSize = _sentenceSize
         self.trainFilePath = _trainFilePath
         self.testFilePath = _testFilePath
+        self.shuffleData = _shuffleData
+        self.randomSeed = _randomSeed

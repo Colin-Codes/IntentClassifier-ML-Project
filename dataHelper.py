@@ -8,7 +8,7 @@ import itertools
 from keras.utils import to_categorical
 
 class Data:
-    def __init__(self, _TrainCSVpath, _TestCSVPath, _inputLength, _shuffle=True):
+    def __init__(self, _TrainCSVpath, _TestCSVPath, _inputLength=-1, _shuffle=True):
         self.inputLength = _inputLength
 
         if _shuffle == True:

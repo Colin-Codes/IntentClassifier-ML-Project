@@ -23,38 +23,38 @@ def buildDeepModel(modelType, embeddedDims, vocabSize, inputs, outputs):
     Model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
     return Model
 
-def trainDeepModel(modelType, split, embeddedDims, epochs, batchSize, sentenceSize, trainFilePath, testFilePath):
+def trainDeepModel(_modelType, _split, _embeddedDims, _epochs, _batchSize, _sentenceSize, _shuffleData, _randomSeed, _trainFilePath, _testFilePath):
     models = []
 
-    data = Data(trainFilePath, testFilePath, sentenceSize)
+    data = Data(_trainFilePath, _testFilePath, _sentenceSize, _shuffle=_shuffleData)
     X = data.npX()
     y = data.npy()
     
-    if split > 1:
-        stratSplit = StratifiedKFold(n_splits=split, shuffle=False, random_state=1)
+    if _split > 1:
+        stratSplit = StratifiedKFold(n_splits=_split, shuffle=_shuffleData, random_state=_randomSeed)
         for iTrain, iVal in stratSplit.split(X, data.decodePredictions(y)):
-            model = buildDeepModel(modelType, embeddedDims, data.vocabSize(), sentenceSize, data.targetSize())
-            model.fit(X[iTrain], y[iTrain], validation_data=(X[iVal], y[iVal]), epochs=epochs, batch_size=batchSize)
+            model = buildDeepModel(_modelType, _embeddedDims, data.vocabSize(), _sentenceSize, data.targetSize())
+            model.fit(X[iTrain], y[iTrain], validation_data=(X[iVal], y[iVal]), epochs=_epochs, batch_size=_batchSize)
             models.append([model, data])
-    elif split == 1:
-        model = buildDeepModel(modelType, embeddedDims, data.vocabSize(), sentenceSize, data.targetSize())
-        model.fit(X, y, epochs=epochs, batch_size=batchSize)
+    elif _split == 1:
+        model = buildDeepModel(_modelType, _embeddedDims, data.vocabSize(), _sentenceSize, data.targetSize())
+        model.fit(X, y, epochs=_epochs, batch_size=_batchSize)
         models.append([model, data])
     else:
-        model = buildDeepModel(modelType, embeddedDims, data.vocabSize(), sentenceSize, data.targetSize())
-        model.fit(X, y, validation_split=split, epochs=epochs, batch_size=batchSize)
+        model = buildDeepModel(_modelType, _embeddedDims, data.vocabSize(), _sentenceSize, data.targetSize())
+        model.fit(X, y, validation_split=_split, epochs=_epochs, batch_size=_batchSize)
         models.append([model, data])
 
     return models[0]
 
-def buildShallowModel(modelType, k):
-    if modelType == "KNN":
-        model = KNeighborsClassifier(n_neighbors=k)
+def buildShallowModel(_modelType, _k):
+    if _modelType == "KNN":
+        model = KNeighborsClassifier(n_neighbors=_k)
     return model
 
-def trainShallowModel(modelType, _split, _k, _trainFilePath, _testFilePath, _embeddingMode):
+def trainShallowModel(_modelType, _split, _k, _embeddingMode, _shuffleData, _randomSeed, _trainFilePath, _testFilePath):
 
-    data = Data(_trainFilePath,_testFilePath, -1)
+    data = Data(_trainFilePath,_testFilePath, _shuffle=_shuffleData)
     if _embeddingMode == "BoW":
         X = data.x_BagOfWords()
     else:    
@@ -62,14 +62,14 @@ def trainShallowModel(modelType, _split, _k, _trainFilePath, _testFilePath, _emb
     y = data.y_labels()
 
     # Model creation and validation
-    model = buildShallowModel(modelType, _k)
+    model = buildShallowModel(_modelType, _k)
     if _split > 1:
-        folds = StratifiedKFold(n_splits=_split, shuffle=True, random_state=1)
+        folds = StratifiedKFold(n_splits=_split, shuffle=_shuffleData, random_state=_randomSeed)
         print(cross_val_score(model, X, y, cv=folds, verbose=10))
     elif _split == 1:
         model.fit(X, y)
     else:
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=_split, random_state=1)
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=_split, random_state=_randomSeed)
         model.fit(X_train, y_train)
         y_pred = model.predict(X_val)
         print('Validation accuracy: ' + str(accuracy_score(y_val, y_pred)))
