@@ -1,3 +1,5 @@
+Please note that the work is this folder (/EDA) is not my own. References are made below to the original paper. It is included in this folder as I have made minor amendments to ensure compatibility with my own work.
+
 # EDA: Easy Data Augmentation Techniques for Boosting Performance on Text Classification Tasks
 This is the code for the EMNLP-IJCNLP paper [EDA: Easy Data Augmentation techniques for boosting performance on text classification tasks.](https://arxiv.org/abs/1901.11196) A blog post that explains EDA is [here](https://medium.com/@jason.20/these-are-the-easiest-data-augmentation-techniques-in-natural-language-processing-you-can-think-of-88e393fd610). 
 
