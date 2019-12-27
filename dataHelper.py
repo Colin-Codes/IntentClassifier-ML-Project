@@ -8,18 +8,18 @@ import itertools
 from keras.utils import to_categorical
 
 class Data:
-    def __init__(self, _TrainCSVpath, _TestCSVPath, _inputLength=-1, _shuffle=True):
-        self.inputLength = _inputLength
+    def __init__(self, _parameters):
+        self.parameters = _parameters
 
-        if _shuffle == True:
-            self.df = pd.read_csv(_TrainCSVpath).sample(frac=1)
-            self.df_test = pd.read_csv(_TestCSVPath).sample(frac=1)
+        if self.parameters.shuffleData == True:
+            self.df = pd.read_csv(self.parameters.trainFilePath).sample(frac=1)
+            self.df_test = pd.read_csv(self.parameters.testFilePath).sample(frac=1)
         else:
-            self.df = pd.read_csv(_TrainCSVpath)
-            self.df_test = pd.read_csv(_TestCSVPath)            
+            self.df = pd.read_csv(self.parameters.trainFilePath)
+            self.df_test = pd.read_csv(self.parameters.trainFilePath)            
 
         # Shallow models
-        if _inputLength < 0:
+        if self.parameters.sentenceSize < 0:
 
             # Create the BoW embedding
             BoWModel = CountVectorizer(stop_words='english')
@@ -34,13 +34,13 @@ class Data:
             self.X_test_TFIDF = TFIDF.transform(self.df_test['Email'])
             
         # Deep models
-        with open(_TrainCSVpath, "r") as importTrainCSV:
+        with open(self.parameters.trainFilePath, "r") as importTrainCSV:
             self.trainSamples = [i for i in list(csv.reader(importTrainCSV))[1:]]
-        with open(_TestCSVPath, "r") as importTestCSV:
+        with open(self.parameters.testFilePath, "r") as importTestCSV:
             self.testSamples = [i for i in list(csv.reader(importTestCSV))[1:]]
 
         # Shuffle
-        if _shuffle == True:
+        if self.parameters.shuffleData == True:
             random.shuffle(self.trainSamples)
             random.shuffle(self.testSamples)
         
@@ -72,9 +72,9 @@ class Data:
     def encodeExamples(self, examples):
         examples = [self.encodeSentence(example) for example in examples]
         for example in examples:
-            while(len(example)) < self.inputLength:
+            while(len(example)) < self.parameters.sentenceSize:
                 example.append(0) 
-        examples = [example[:self.inputLength] for example in examples]
+        examples = [example[:self.parameters.sentenceSize] for example in examples]
         return np.array(examples)
 
     def encodeSentence(self, sentence):
@@ -149,7 +149,7 @@ class Data:
         return self.df_test['Class']
 
     def modelType(self):
-        if self.inputLength < 0:
+        if self.parameters.sentenceSize < 0:
             return "Shallow"
         else:
             return "Deep"

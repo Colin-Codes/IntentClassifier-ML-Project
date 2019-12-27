@@ -1,8 +1,11 @@
 from modelHelper import trainDeepModel, trainShallowModel
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from dataHelper import Data
+from datetime import datetime
 import numpy as np
 import pandas as pd
+import pickle
+import random
 
 
 class Experiments:
@@ -12,10 +15,10 @@ class Experiments:
 
     def run(self):
         for Parameters in self.experiments:
-            if Parameters.modelType == "KNN":
-                self.models.append(trainShallowModel(Parameters.modelType, Parameters.kFolds, Parameters.nNeighbours, Parameters.embeddingMode, Parameters.shuffleData, Parameters.randomSeed, Parameters.trainFilePath, Parameters.testFilePath))
+            if Parameters.modelName == "KNN":
+                self.models.append(trainShallowModel(Parameters))
             else:
-                self.models.append(trainDeepModel(Parameters.modelType, Parameters.kFolds, Parameters.embeddedDims, Parameters.epochs, Parameters.batchSize, Parameters.sentenceSize, Parameters.shuffleData, Parameters.randomSeed, Parameters.trainFilePath, Parameters.testFilePath))
+                self.models.append(trainDeepModel(Parameters))
 
     def evaluate(self):
         # Evaluation
@@ -38,15 +41,18 @@ class Experiments:
             print(accuracy_score(y, y_pred))
 
     def printResults(self, outputFileName=''):
-        # Evaluation
+        # Recording
+        dateTimeNow = datetime.now()
         for modelData in self.models:
             model = modelData[0]
             data = modelData[1]
-            if outputFileName == '':            
-                if model.modelType == 'KNN':
-                    outputFileName = 'results/' + model.modelType + '_' + model.kFolds + '_' + model.nNeighbours + '_' + model.embeddingMode + '.csv'
+            Parameters = data.parameters
+            if outputFileName == '':         
+                dateTimeString = str(dateTimeNow.strftime("%Y%m%d_%H%M%S"))   
+                if data.modelType() == 'Shallow':
+                    outputFileName = Parameters.modelName + '_' + str(Parameters.kFolds) + '_' + str(Parameters.nNeighbours) + '_' + str(Parameters.embeddingMode) + '_' + dateTimeString + '.csv'
                 else:
-                    outputFileName = 'results/' + model.modelType + '_' + model.kFolds + '_' + model.embeddedDims + '_' + model.epochs + '_' + model.batchSize + '_' + model.sentenceSize + '.csv'
+                    outputFileName = Parameters.modelName + '_' + str(Parameters.kFolds) + '_' + str(Parameters.embeddedDims) + '_' + str(Parameters.epochs) + '_' + str(Parameters.batchSize) + '_' + str(Parameters.sentenceSize) + '_' + dateTimeString + '.csv'
             if data.modelType() == "Shallow":
                 y_pred = model.predict(data.x_test_BagOfWords())
                 y = data.y_test_labels()
@@ -55,11 +61,30 @@ class Experiments:
                 y = data.decodePredictions(data.npy_test())
             X = data.Xtext_test()
             trainingSet = pd.DataFrame(list(zip(y_pred, y, X)), columns=['Predicted Class','True Class','Email'])
-            trainingSet.to_csv(outputFileName, index = None, header=True)
+            trainingSet.to_csv('results/' + outputFileName, index = None, header=True)            
+            classReport = classification_report(y, y_pred, output_dict=True)
+            classReport['modelName'] = Parameters.modelName
+            classReport['modelkFolds'] = Parameters.kFolds
+            classReport['modelnNeighbours'] = Parameters.nNeighbours
+            classReport['modelEmbeddingMode'] = Parameters.embeddingMode
+            classReport['modelEmbeddedDims'] = Parameters.embeddedDims
+            classReport['modelEpochs'] = Parameters.epochs
+            classReport['modelbatchSize'] = Parameters.batchSize
+            classReport['modelsentenceSize'] = Parameters.sentenceSize
+
+            with open('results/CR_' + outputFileName.replace('.csv','.pickle'), 'wb') as pikl:
+                pickle.dump(classReport, pikl)
+
+    def showResults(self, _fileName):
+        with open('results/' + _fileName, 'rb') as pikl:
+            classReportDict = pickle.load(pikl)
+        print(classReportDict)
 
 class Experiment:
-    def __init__(self, _modelType, _kFolds=5, _nNeighbours=5,_embeddingMode='BoW', _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=20, _shuffleData=False, _randomSeed=42, _trainFilePath='data/trainingset_augmented.csv', _testFilePath='data/testset.csv'):
-        self.modelType = _modelType
+    def __init__(self, _modelName, _kFolds=5, _nNeighbours=5,_embeddingMode='BoW', _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=-1, _shuffleData=True, _randomSeed=-1, _trainFilePath='data/trainingset_augmented.csv', _testFilePath='data/testset.csv'):
+        dateTimeNow = datetime.now()
+        random.seed(int(dateTimeNow.strftime('%f')))
+        self.modelName = _modelName
         self.kFolds = _kFolds
         self.nNeighbours = _nNeighbours
         self.embeddingMode = _embeddingMode
@@ -70,4 +95,7 @@ class Experiment:
         self.trainFilePath = _trainFilePath
         self.testFilePath = _testFilePath
         self.shuffleData = _shuffleData
-        self.randomSeed = _randomSeed
+        if _randomSeed == -1:
+            self.randomSeed = random.random() * int(dateTimeNow.strftime("%f"))
+        else:
+            self.randomSeed = _randomSeed

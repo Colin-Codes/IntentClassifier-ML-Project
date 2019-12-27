@@ -41,7 +41,7 @@ print("Balanced class distribution: \n" + str(balancedTrainingSetDistribution))
 
 #Augmented dataset
 currentPath = os.getcwd()
-os.chdir('eda_nlp/code')
+os.chdir('EDA/code')
 os.system('augment.py --input=../../data/trainingSet_balanced.csv --output=../../data/trainingSet_augmented.csv --num_aug=4 --alpha=0.1')
 os.chdir(currentPath)
 data_augmented = Data('data/trainingset_augmented.csv','data/testset.csv', -1)
