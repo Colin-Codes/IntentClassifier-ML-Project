@@ -63,6 +63,7 @@ class Data:
         self.target_words = set(itertools.chain(*self.targets))
         self.target2int = dict((word,enum) for enum, word in enumerate(self.target_words))
         self.int2target = list(self.target_words)
+        self.int2target.append('Threshold')
         self.y = to_categorical([self.target2int[target[0]] for target in self.targets])
 
         # Test target classes
@@ -101,6 +102,12 @@ class Data:
 
     def decodePrediction(self, prediction):
         return self.int2target[np.argmax(prediction)]
+
+    def indexPrediction(self, prediction):
+        if prediction == 'Threshold':
+            return len(self.target2int)
+        else:
+            return self.target2int[prediction]
 
     def npX(self):
         return np.array(self.X, dtype='int32')

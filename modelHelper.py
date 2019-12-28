@@ -28,12 +28,12 @@ def trainDeepModel(Parameters):
 
     _modelName = Parameters.modelName
     _split = Parameters.kFolds
-    _shuffleData = Parameters.shuffleData
-    _randomSeed = Parameters.randomSeed
     _embeddedDims = Parameters.embeddedDims
     _sentenceSize = Parameters.sentenceSize
     _epochs = Parameters.epochs
     _batchSize = Parameters.batchSize
+    _shuffleData = Parameters.shuffleData
+    _randomSeed = Parameters.randomSeed
 
     data = Data(Parameters)
     X = data.npX()
@@ -66,8 +66,8 @@ def trainShallowModel(Parameters):
     _modelName = Parameters.modelName
     _embeddingMode = Parameters.embeddingMode
     _kFolds = Parameters.kFolds
-    _shuffleData = Parameters.shuffleData
     _split = Parameters.split
+    _shuffleData = Parameters.shuffleData
     _randomSeed = Parameters.randomSeed
 
     data = Data(Parameters)

@@ -25,14 +25,16 @@ class Experiments:
         for modelData in self.models:
             model = modelData[0]
             data = modelData[1]
+            thresholdIndex = data.indexPrediction('Threshold')
+            thresholdValue = data.parameters.threshold
             if data.modelType() == "Shallow":
-                y_pred = model.predict(data.x_test_BagOfWords())
+                Predictions = np.insert(model.predict_proba(data.x_test_BagOfWords()), thresholdIndex, thresholdValue, axis=1)
+                y_pred = data.decodePredictions(Predictions)
                 y = data.y_test_labels()
             else:
-                y_pred = data.decodePredictions(model.predict(data.npX_test()))
+                Predictions = np.insert(model.predict(data.npX_test()), thresholdIndex, thresholdValue, axis=1)
+                y_pred = data.decodePredictions(Predictions)
                 y = data.decodePredictions(data.npy_test())
-            #print(y_pred)
-            #print(y)
             print('Confusion Matrix:')
             print(confusion_matrix(y, y_pred))
             print('Classification Report:')
@@ -53,11 +55,15 @@ class Experiments:
                     outputFileName = Parameters.modelName + '_' + str(Parameters.kFolds) + '_' + str(Parameters.nNeighbours) + '_' + str(Parameters.embeddingMode) + '_' + dateTimeString + '.csv'
                 else:
                     outputFileName = Parameters.modelName + '_' + str(Parameters.kFolds) + '_' + str(Parameters.embeddedDims) + '_' + str(Parameters.epochs) + '_' + str(Parameters.batchSize) + '_' + str(Parameters.sentenceSize) + '_' + dateTimeString + '.csv'
-            if data.modelType() == "Shallow":
-                y_pred = model.predict(data.x_test_BagOfWords())
+            thresholdIndex = data.indexPrediction('Threshold')
+            thresholdValue = data.parameters.threshold
+            if data.modelType() == "Shallow":                
+                Predictions = np.insert(model.predict_proba(data.x_test_BagOfWords()), thresholdIndex, thresholdValue, axis=1)
+                y_pred = data.decodePredictions(Predictions)
                 y = data.y_test_labels()
             else:
-                y_pred = data.decodePredictions(model.predict(data.npX_test()))
+                Predictions = np.insert(model.predict(data.npX_test()), thresholdIndex, thresholdValue, axis=1)
+                y_pred = data.decodePredictions(Predictions)
                 y = data.decodePredictions(data.npy_test())
             X = data.Xtext_test()
             trainingSet = pd.DataFrame(list(zip(y_pred, y, X)), columns=['Predicted Class','True Class','Email'])
@@ -71,6 +77,7 @@ class Experiments:
             classReport['modelEpochs'] = Parameters.epochs
             classReport['modelbatchSize'] = Parameters.batchSize
             classReport['modelsentenceSize'] = Parameters.sentenceSize
+            classReport['Threshold'] = Parameters.threshold
 
             with open('results/CR_' + outputFileName.replace('.csv','.pickle'), 'wb') as pikl:
                 pickle.dump(classReport, pikl)
@@ -79,9 +86,22 @@ class Experiments:
         with open('results/' + _fileName, 'rb') as pikl:
             classReportDict = pickle.load(pikl)
         print(classReportDict)
+    
+    def printReport(self, xVar, yVar, Parameters):
+        # Create functions for different kinds of yVar eg. overall accuracy / mean of actionable precisions / recall / BOTH?
+
+        # Instantiate graphData
+        # For each Pickle:
+            # Select each possible xVar, match according to other params:
+                # If matching, get yVar, and append on graphData against xVar
+
+        # Create matplotlib using graphData
+
+    def showreport(self, _filename):
+        # Show matplotlib
 
 class Experiment:
-    def __init__(self, _modelName, _kFolds=5, _nNeighbours=5,_embeddingMode='BoW', _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=-1, _shuffleData=True, _randomSeed=-1, _trainFilePath='data/trainingset_augmented.csv', _testFilePath='data/testset.csv'):
+    def __init__(self, _modelName, _kFolds=5, _nNeighbours=5,_embeddingMode='BoW', _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=-1, threshold=0.8, _shuffleData=True, _randomSeed=-1, _trainFilePath='data/trainingset_augmented.csv', _testFilePath='data/testset.csv'):
         dateTimeNow = datetime.now()
         random.seed(int(dateTimeNow.strftime('%f')))
         self.modelName = _modelName
@@ -92,10 +112,11 @@ class Experiment:
         self.epochs = _epochs
         self.batchSize = _batchSize
         self.sentenceSize = _sentenceSize
-        self.trainFilePath = _trainFilePath
-        self.testFilePath = _testFilePath
+        self.threshold = threshold
         self.shuffleData = _shuffleData
         if _randomSeed == -1:
             self.randomSeed = random.random() * int(dateTimeNow.strftime("%f"))
         else:
             self.randomSeed = _randomSeed
+        self.trainFilePath = _trainFilePath
+        self.testFilePath = _testFilePath
