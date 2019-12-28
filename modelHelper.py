@@ -66,7 +66,7 @@ def trainShallowModel(Parameters):
     _modelName = Parameters.modelName
     _embeddingMode = Parameters.embeddingMode
     _kFolds = Parameters.kFolds
-    _split = Parameters.split
+    _nNeighbours = Parameters.nNeighbours
     _shuffleData = Parameters.shuffleData
     _randomSeed = Parameters.randomSeed
 
@@ -78,17 +78,19 @@ def trainShallowModel(Parameters):
     y = data.y_labels()
 
     # Model creation and validation
-    model = buildShallowModel(_modelName, _kFolds)
-    if _split > 1:
-        folds = StratifiedKFold(n_splits=_split, shuffle=_shuffleData, random_state=_randomSeed)
+    model = buildShallowModel(_modelName, _nNeighbours)
+    if _kFolds > 1:
+        folds = StratifiedKFold(n_splits=_kFolds, shuffle=_shuffleData, random_state=_randomSeed)
         print(cross_val_score(model, X, y, cv=folds, verbose=10))
-    elif _split == 1:
         model.fit(X, y)
+    elif _kFolds == 1:
+        model.fit(X, y)
+        print('Neighbours: ' + str(_nNeighbours) + ' Embedding Mode: ' + _embeddingMode)
     else:
-        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=_split, random_state=_randomSeed)
+        X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=_kFolds, random_state=_randomSeed)
         model.fit(X_train, y_train)
         y_pred = model.predict(X_val)
         print('Validation accuracy: ' + str(accuracy_score(y_val, y_pred)))
+        model.fit(X, y)
 
-    model.fit(X, y)
     return [model, data]
