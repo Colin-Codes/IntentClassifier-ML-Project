@@ -152,6 +152,9 @@ class Data:
     def y_labels(self):
         return self.df['Class']
     
+    def y_labelsIndexed(self):
+        return [self.target2int[i] for i in self.df['Class']]
+    
     def y_test_labels(self):
         return self.df_test['Class']
 

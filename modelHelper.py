@@ -75,7 +75,7 @@ def trainShallowModel(Parameters):
         X = data.x_BagOfWords()
     else:    
         X = data.x_TFIDF()
-    y = data.y_labels()
+    y = data.y_labelsIndexed()
 
     # Model creation and validation
     model = buildShallowModel(_modelName, _nNeighbours)

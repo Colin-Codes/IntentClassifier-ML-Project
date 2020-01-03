@@ -2,12 +2,13 @@ import pandas as pd
 import numpy as np
 import os
 from dataHelper import Data
+from experimentHelper import Experiment
 from sklearn.model_selection import train_test_split
 from imblearn.over_sampling import SMOTE
 from imblearn.over_sampling import RandomOverSampler
 
 # Raw dataset
-data = Data('data/originalData.csv','data/originalData.csv', -1)
+data = Data(Experiment(_modelName='n/a',_trainFilePath='data/originalData.csv',_testFilePath='data/originalData.csv'))
 originalSet = data.pdDataFrame()
 X = originalSet['Email']
 y = originalSet['Class']
@@ -44,5 +45,5 @@ currentPath = os.getcwd()
 os.chdir('EDA/code')
 os.system('augment.py --input=../../data/trainingSet_balanced.csv --output=../../data/trainingSet_augmented.csv --num_aug=4 --alpha=0.1')
 os.chdir(currentPath)
-data_augmented = Data('data/trainingset_augmented.csv','data/testset.csv', -1)
+data_augmented = Data(Experiment(_modelName='n/a',_trainFilePath='data/trainingset_augmented.csv',_testFilePath='data/testset.csv'))
 print("Augmented class distribution: \n" + str(data_augmented.classDistribution()))
