@@ -73,8 +73,11 @@ def trainShallowModel(Parameters):
     data = Data(Parameters)
     if _embeddingMode == "BoW":
         X = data.x_BagOfWords()
-    else:    
+    elif _embeddingMode == "TFIDF":
         X = data.x_TFIDF()
+    else:
+        print("Invalid embedding mode selected")
+        return
     y = data.y_labelsIndexed()
 
     # Model creation and validation
