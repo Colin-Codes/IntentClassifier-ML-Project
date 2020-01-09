@@ -2,7 +2,6 @@ from modelHelper import trainDeepModel, trainShallowModel
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
 from dataHelper import Data
 from datetime import datetime
-from matplotlib import cm
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,6 +9,7 @@ import pickle
 import math
 import random
 import os
+import csv
 
 
 class Experiments:
@@ -130,7 +130,26 @@ class Experiments:
             classReportDict = pickle.load(pikl)
         print(classReportDict)
 
-    def printCompareParameterClasses(self, Model, classList=[], parameter='threshold', saveFolder='results/Global/'):
+    def printSentenceLengths(self):
+
+        for _, _, files in os.walk('data/'):
+            for csvFile in files:
+                if '.csv' in csvFile:
+                    with open('data/' + csvFile, "r") as importTrainCSV:
+                        samples = [i[1:2].split(' ') for i in list(csv.reader(importTrainCSV))[1:]]
+                        counts = [len(i) for i in samples]
+                        plt.figure()
+                        plt.hist(counts, facecolor='blue', alpha=0.5)
+                        plt.xlabel('Sentence lengths')
+                        plt.ylabel('Occurence')
+                        plt.title('Histogram of sentence lengths in dataset: ' + csvFile)
+                        plt.savefig('data/graphs/' + csvFile.replace('.csv','.png'))
+
+        for i in plt.get_fignums():
+            plt.close(i)
+        return
+
+    def printCompareParameterClasses(self, Model, classList=[], parameter='threshold', parameterValues=[], saveFolder='results/Global/'):
         ### This function is useful for comparing the effect of changes in a parameter across all classes
 
         # Ensure folder format is correct
@@ -161,60 +180,82 @@ class Experiments:
     
         # Generate a list of labels from the first Result
         labelsAvailable = [label for label in ExperimentResults[0].keys() if 'model' not in label and label not in ['micro avg','macro avg','weighted avg']]
-        parameterRange = [Results['model' + parameter] for Results in ExperimentResults]
+        parameterRange = sorted(set([Results['model' + parameter] for Results in ExperimentResults]))
+        if len(parameterValues) > 0:
+            parameterRange = [i for i in parameterRange if i in parameterValues]
 
         # Iterate over each class in each dict, append to the class index as a tuple: the parameter value (0) and the Precision/Recall (1) 
-        xLabels = [[[] for j in labelsAvailable] for i in parameterRange]
+        xLabels = [[j for j in labelsAvailable] for i in parameterRange]
         yPrecision = [[[] for j in labelsAvailable] for i in parameterRange]
         yRecall = [[[] for j in labelsAvailable] for i in parameterRange]
-        xFilteredLabels = [[j for j in classList[i]] for i in parameterRange]
-        yFilteredPrecision = [[[] for j in classList[i]] for i in parameterRange]
-        yFilteredRecall = [[[] for j in classList[i]] for i in parameterRange]
+        aggregatePrecision = [[] for j in labelsAvailable]
+        aggregateRecall = [[] for j in labelsAvailable]
         for i in parameterRange:
-            for Results in ExperimentResults[i]:
-                for Result in Results:
-                    if Result['model' + parameter] == i:
-                        for key in Result.keys():
-                            if key in labelsAvailable:
-                                yPrecision[i][labelsAvailable.index(key)].append(Result[key]['precision'])
-                                yRecall[i][labelsAvailable.index(key)].append(Result[key]['recall'])
-                            if key in classList[i]:
-                                yFilteredPrecision[i][classList[i].index(key)].append(Result[key]['precision'])
-                                yFilteredRecall[i][classList[i].index(key)].append(Result[key]['recall'])
+            for Result in ExperimentResults:
+                if Result['model' + parameter] == i:
+                    for key in Result.keys():
+                        if key in labelsAvailable:
+                            aggregatePrecision[labelsAvailable.index(key)].append(Result[key]['precision'])
+                            aggregateRecall[labelsAvailable.index(key)].append(Result[key]['recall'])
+                            yPrecision[parameterRange.index(i)][labelsAvailable.index(key)].append(Result[key]['precision'])
+                            yRecall[parameterRange.index(i)][labelsAvailable.index(key)].append(Result[key]['recall'])    
+        MeanPrecision = [np.mean(i) for i in aggregatePrecision]
+        MeanRecall = [np.mean(i) for i in aggregateRecall]
 
-        # Average all results within each class
-        yPrecisionMean = []
-        yRecallMean = []
-        yPrecisionErr = []
-        yRecallErr = []
-        
-        yPrecisionMean = [[np.mean(i) for i in j] for j in yPrecision]
-        yRecallMean = [[np.mean(i) for i in j] for j in yRecall]
-        yPrecisionErr = [[np.std(i) for i in j] for j in yPrecision]
-        yRecallErr = [[np.std(i) for i in j] for j in yRecall]
-        
-        yFilteredPrecisionMean = [[np.mean(i) for i in j] for j in yFilteredPrecision]
-        yFilteredRecallMean = [[np.mean(i) for i in j] for j in yFilteredRecall]
-        yFilteredPrecisionErr = [[np.std(i) for i in j] for j in yFilteredPrecision]
-        yFilteredRecallErr = [[np.std(i) for i in j] for j in yFilteredRecall]
+        # Average all results within each class   
+        xPrecisionLabels = [[i for _,i in sorted(zip(MeanPrecision,j))] for j in xLabels]
+        xRecallLabels = [[i for _,i in sorted(zip(MeanRecall,j))] for j in xLabels]
+        yPrecisionMean = [[np.mean(i) * 100 for _,i in sorted(zip(MeanPrecision,j))] for j in yPrecision]
+        yRecallMean = [[np.mean(i) * 100 for _,i in sorted(zip(MeanRecall,j))] for j in yRecall]
+        yPrecisionErr = [[np.std(i) * 100 for _,i in sorted(zip(MeanPrecision,j))] for j in yPrecision]
+        yRecallErr = [[np.std(i) * 100 for _,i in sorted(zip(MeanRecall,j))] for j in yRecall]
 
-        saveRoot  = ''
-        titleExtension = ''
-        saveRoot = saveFolder + 'graphs/comparison_' + parameter
-        titleExtension = ' split by ' + parameter
+        precisionSaveRoot = saveFolder + 'graphs/precision/' + Model + '/comparison_' + parameter
+        recallSaveRoot = saveFolder + 'graphs/recall/' + Model + '/comparison_' + parameter
+        titleExtension = ', split by ' + parameter + ' (' + Model + ')'
+        for value in parameterValues:
+            precisionSaveRoot += '_' + str(value)
+            recallSaveRoot += '_' + str(value)
 
         # Create precision graph
-        self.createErrorPlots(xPlots=xLabels, yPlots=yPrecisionMean, yErrList = yPrecisionErr, xAxisName = 'Class', yAxisName = 'Precision (%)', title = 'Precision against Class ' + titleExtension, FileName = saveRoot + '_precision.png')
+        self.createPlots(xPlots=xPrecisionLabels, yPlots=yPrecisionMean, yErrList = yPrecisionErr, plotLabels=parameterRange, xAxisName = 'Class', yAxisName = 'Precision (%)', legendTitle=parameter.capitalize(), title = 'Precision against Class' + titleExtension, fileName = precisionSaveRoot + '_' + Model + '_precision.png', scatter=True)
            
         # Create recall graph
-        self.createErrorPlots(xPlots=xLabels, yPlots=yRecallMean, yErrList = yRecallErr, xAxisName = 'Class', yAxisName = 'Recall (%)', title = 'Recall against Class ' + titleExtension, FileName = saveRoot + '_recall.png')
+        self.createPlots(xPlots=xRecallLabels, yPlots=yRecallMean, yErrList = yRecallErr, plotLabels=parameterRange, xAxisName = 'Class', yAxisName = 'Recall (%)', legendTitle=parameter.capitalize(), title = 'Recall against Class' + titleExtension, fileName = recallSaveRoot + '_' + Model + '_recall.png', scatter=True)
 
-        if len(classList) > 0:     
+        if len(classList) > 0:
+
+            # Get data
+            xFilteredLabels = [[j for j in classList] for i in parameterRange]
+            yFilteredPrecision = [[[] for j in classList] for i in parameterRange]
+            yFilteredRecall = [[[] for j in classList] for i in parameterRange]
+            aggregateFilteredPrecision = [[] for j in classList]
+            aggregateFilteredRecall = [[] for j in classList]
+            for i in parameterRange:
+                for Result in ExperimentResults[i]:
+                    if Result['model' + parameter] == i:
+                        for key in Result.keys():
+                            if key in classList:
+                                aggregateFilteredPrecision[classList.index(key)].append(Result[key]['precision'])
+                                aggregateFilteredRecall[classList.index(key)].append(Result[key]['recall'])
+                                yFilteredPrecision[parameterRange.index(i)][classList.index(key)].append(Result[key]['precision'])
+                                yFilteredRecall[parameterRange.index(i)][classList.index(key)].append(Result[key]['recall'])
+            MeanFilteredPrecision = [np.mean(i) for i in aggregateFilteredPrecision]
+            MeanFilteredRecall = [np.mean(i) for i in aggregateFilteredRecall]
+            
+            #Average data
+            xFilteredPrecisionLabels = [[i for _,i in sorted(zip(MeanFilteredPrecision,j))] for j in xFilteredLabels]
+            xFilteredRecallLabels = [[i for _,i in sorted(zip(MeanFilteredRecall,j))] for j in xFilteredLabels]
+            yFilteredPrecisionMean = [[np.mean(i) * 100 for _,i in sorted(zip(MeanFilteredPrecision,j))] for j in yFilteredPrecision]
+            yFilteredRecallMean = [[np.mean(i) * 100 for _,i in sorted(zip(MeanFilteredRecall,j))] for j in yFilteredRecall]
+            yFilteredPrecisionErr = [[np.std(i) * 100 for _,i in sorted(zip(MeanFilteredPrecision,j))] for j in yFilteredPrecision]
+            yFilteredRecallErr = [[np.std(i) * 100 for _,i in sorted(zip(MeanFilteredRecall,j))] for j in yFilteredRecall]
+
             # Create filtered precision graph 
-            self.createErrorPlots(xPlots=xFilteredLabels, yPlots=yFilteredPrecisionMean, yErrList = yFilteredPrecisionErr, xAxisName = 'Class', yAxisName = 'Precision (%)', title = 'Precision against Class (filtered) ' + titleExtension, FileName = saveRoot + '_precision_filtered.png')
+            self.createPlots(xPlots=xFilteredPrecisionLabels, yPlots=yFilteredPrecisionMean, yErrList = yFilteredPrecisionErr, plotLabels=parameterRange, xAxisName = 'Class', yAxisName = 'Precision (%)', legendTitle=parameter.capitalize(), title = 'Precision against Class (filtered)' + titleExtension, fileName = precisionSaveRoot + '_' + Model + '_precision_filtered.png', scatter=True)
             
             # Create filtered recall graph
-            self.createErrorPlots(xPlots=xFilteredLabels, yPlots=yFilteredRecallMean, yErrList = yFilteredRecallErr, xAxisName = 'Class', yAxisName = 'Recall (%)', title = 'Recall against Class (filtered) ' + titleExtension, FileName = saveRoot + '_recall_filtered.png')
+            self.createPlots(xPlots=xFilteredRecallLabels, yPlots=yFilteredRecallMean, yErrList = yFilteredRecallErr, plotLabels=parameterRange, xAxisName = 'Class', yAxisName = 'Recall (%)', legendTitle=parameter.capitalize(), title = 'Recall against Class (filtered)' + titleExtension, fileName = recallSaveRoot + '_' + Model + '_recall_filtered.png', scatter=True)
         return
 
     def printCompareExperimentsClasses(self, ModelsList=[], classList=[], loadFolders = ['results/'], saveFolder='results/Global/'):
@@ -230,10 +271,11 @@ class Experiments:
         byFolder = False
 
         for Models in ModelsList:
-            if len(ModelsList) > 0:
-                byModel = True
-                break
-        
+            for Model in ModelsList[0]:
+                if Model not in Models:
+                    byModel = True
+                    break
+                    
         for loadFolder in loadFolders:
             firstFolder = loadFolders[0]
             if loadFolder != firstFolder:
@@ -245,9 +287,9 @@ class Experiments:
         plotLabels = []
         for i in range(0,len(loadFolders)):
             if byFolder == True and byModel == True:
-                plotLabels.append(Models[i[0]] + '-' + loadFolders[i].split('/')[-2])
+                plotLabels.append('-'.join(ModelsList[i]) + '-' + loadFolders[i].split('/')[-2])
             elif byModel == True:
-                plotLabels.append(Models[i[0]])
+                plotLabels.append(ModelsList[i](0))
             elif byFolder == True:
                 plotLabels.append(loadFolders[i].split('/')[-2])
             else:
@@ -257,7 +299,7 @@ class Experiments:
             loadFolder = loadFolders[i]
             if loadFolder[-1] != '/':
                 loadFolder += '/'
-            for model in Models[i]:
+            for model in ModelsList[i]:
                 rootdir = loadFolder + model + '/1_Folds'
                 for _, dirs, _ in os.walk(rootdir):
                     if model == 'KNN':
@@ -285,61 +327,66 @@ class Experiments:
         xLabels = [[j for j in labelsAvailable] for i in loadFolders]
         yPrecision = [[[] for j in labelsAvailable] for i in loadFolders]
         yRecall = [[[] for j in labelsAvailable] for i in loadFolders]
-        xFilteredLabels = [[j for j in classList[i]] for i in loadFolders]
-        yFilteredPrecision = [[[] for j in classList[i]] for i in loadFolders]
-        yFilteredRecall = [[[] for j in classList[i]] for i in loadFolders]
         for i in range(0,len(loadFolders)):
             Results = loadFolders[i]
             for Result in Results:
                 for key in Result.keys():
                     if key in labelsAvailable:
-                        xLabels[i][labelsAvailable.index(key)].append(key)
                         yPrecision[i][labelsAvailable.index(key)].append(Result[key]['precision'])
                         yRecall[i][labelsAvailable.index(key)].append(Result[key]['recall'])
-                    if key in classList[i]:
-                        xFilteredLabels[i][classList[i].index(key)].append(key)
-                        yFilteredPrecision[i][classList[i].index(key)].append(Result[key]['precision'])
-                        yFilteredRecall[i][classList[i].index(key)].append(Result[key]['recall'])
 
-        # Average all results within each class
-        yPrecisionMean = []
-        yRecallMean = []
-        yPrecisionErr = []
-        yRecallErr = []
-        
-        yPrecisionMean = [[np.mean(i) for i in j] for j in yPrecision]
-        yRecallMean = [[np.mean(i) for i in j] for j in yRecall]
-        yPrecisionErr = [[np.std(i) for i in j] for j in yPrecision]
-        yRecallErr = [[np.std(i) for i in j] for j in yRecall]
-        
-        yFilteredPrecisionMean = [[np.mean(i) for i in j] for j in yFilteredPrecision]
-        yFilteredRecallMean = [[np.mean(i) for i in j] for j in yFilteredRecall]
-        yFilteredPrecisionErr = [[np.std(i) for i in j] for j in yFilteredPrecision]
-        yFilteredRecallErr = [[np.std(i) for i in j] for j in yFilteredRecall]
+        # Average all results within each class        
+        yPrecisionMean = [[np.mean(i) * 100 for i in j] for j in yPrecision]
+        yRecallMean = [[np.mean(i) * 100 for i in j] for j in yRecall]
+        yPrecisionErr = [[np.std(i) * 100 for i in j] for j in yPrecision]
+        yRecallErr = [[np.std(i) * 100 for i in j] for j in yRecall]
 
-        saveRoot  = ''
+        precisionSaveRoot  = ''
+        recallSaveRoot  = ''
         titleExtension = ''
         if byFolder == True and byModel == True:
-            saveRoot = saveFolder + 'graphs/comparison_multiplemodels_multiplefolders'
+            precisionSaveRoot = saveFolder + 'graphs/precision/comparison_multiplemodels_multiplefolders'
+            recallSaveRoot = saveFolder + 'graphs/recall/comparison_multiplemodels_multiplefolders'
         elif byModel == True:
-            saveRoot = saveFolder + 'graphs/comparison_' + loadFolders[0].split('/')[-2]
+            precisionSaveRoot = saveFolder + 'graphs/precision/' + loadFolders[0].split('/')[-2] + '/comparison_' + loadFolders[0].split('/')[-2]
+            recallSaveRoot = saveFolder + 'graphs/recall/' + loadFolders[0].split('/')[-2] + '/comparison_' + loadFolders[0].split('/')[-2]
             titleExtension = 'by model type'
         elif byFolder == True:
-            saveRoot = saveFolder + 'graphs/comparison_' + Models[0][0]
+            precisionSaveRoot = saveFolder + 'graphs/precision/' + ModelsList[0][0] + '/comparison_' + ModelsList[0][0]
+            recallSaveRoot = saveFolder + 'graphs/recall/' + ModelsList[0][0] + '/comparison_' + ModelsList[0][0]
             titleExtension = 'by dataset'
 
         # Create precision graph
-        self.createErrorPlots(xPlots=xLabels, yPlots=yPrecisionMean, yErrList = yPrecisionErr, xAxisName = 'Class', yAxisName = 'Precision (%)', title = 'Precision against Class ' + titleExtension, FileName = saveRoot + '_precision.png')
+        self.createPlots(xPlots=xLabels, yPlots=yPrecisionMean, yErrList = yPrecisionErr, plotLabels=plotLabels, xAxisName = 'Class', yAxisName = 'Precision (%)', legendTitle=titleExtension.replace('by ',''), title = 'Precision against Class ' + titleExtension, fileName = precisionSaveRoot + '_precision.png')
            
         # Create recall graph
-        self.createErrorPlots(xPlots=xLabels, yPlots=yRecallMean, yErrList = yRecallErr, xAxisName = 'Class', yAxisName = 'Recall (%)', title = 'Recall against Class ' + titleExtension, FileName = saveRoot + '_recall.png')
+        self.createPlots(xPlots=xLabels, yPlots=yRecallMean, yErrList = yRecallErr, plotLabels=plotLabels, xAxisName = 'Class', yAxisName = 'Recall (%)', legendTitle=titleExtension.replace('by ',''), title = 'Recall against Class ' + titleExtension, fileName = recallSaveRoot + '_recall.png')
 
-        if len(classList) > 0:     
+        if len(classList) > 0:  
+
+            # Get data
+            xFilteredLabels = [[j for j in classList[i]] for i in loadFolders]
+            yFilteredPrecision = [[[] for j in classList[i]] for i in loadFolders]
+            yFilteredRecall = [[[] for j in classList[i]] for i in loadFolders]   
+            for i in range(0,len(loadFolders)):
+                Results = loadFolders[i]
+                for Result in Results:
+                    for key in Result.keys():
+                        if key in classList[i]:
+                            yFilteredPrecision[i][classList[i].index(key)].append(Result[key]['precision'])
+                            yFilteredRecall[i][classList[i].index(key)].append(Result[key]['recall'])
+        
+            # Average data
+            yFilteredPrecisionMean = [[np.mean(i) * 100 for i in j] for j in yFilteredPrecision]
+            yFilteredRecallMean = [[np.mean(i) * 100 for i in j] for j in yFilteredRecall]
+            yFilteredPrecisionErr = [[np.std(i) * 100 for i in j] for j in yFilteredPrecision]
+            yFilteredRecallErr = [[np.std(i) * 100 for i in j] for j in yFilteredRecall]
+
             # Create filtered precision graph 
-            self.createErrorPlots(xPlots=xFilteredLabels, yPlots=yFilteredPrecisionMean, yErrList = yFilteredPrecisionErr, xAxisName = 'Class', yAxisName = 'Precision (%)', title = 'Precision against Class (filtered) ' + titleExtension, FileName = saveRoot + '_precision_filtered.png')
+            self.createPlots(xPlots=xFilteredLabels, yPlots=yFilteredPrecisionMean, yErrList = yFilteredPrecisionErr, plotLabels=plotLabels, xAxisName = 'Class', yAxisName = 'Precision (%)', legendTitle=titleExtension.replace('by ',''), title = 'Precision against Class (filtered) ' + titleExtension, fileName = precisionSaveRoot + '_precision_filtered.png')
             
             # Create filtered recall graph
-            self.createErrorPlots(xPlots=xFilteredLabels, yPlots=yFilteredRecallMean, yErrList = yFilteredRecallErr, xAxisName = 'Class', yAxisName = 'Recall (%)', title = 'Recall against Class (filtered) ' + titleExtension, FileName = saveRoot + '_recall_filtered.png')
+            self.createPlots(xPlots=xFilteredLabels, yPlots=yFilteredRecallMean, yErrList = yFilteredRecallErr, plotLabels=plotLabels, xAxisName = 'Class', yAxisName = 'Recall (%)', legendTitle=titleExtension.replace('by ',''), title = 'Recall against Class (filtered) ' + titleExtension, fileName = recallSaveRoot + '_recall_filtered.png')
         return
 
     def printCompareClasses(self, Model, minimum=0.5, loadFolders = ['results/'], saveFolder='results/Global/'):
@@ -407,13 +454,14 @@ class Experiments:
         ySortedPrecisionMean = sorted(yPrecisionMean)
         ySortedRecallMean = sorted(yRecallMean)
 
-        saveRoot = saveFolder + 'graphs/compare_classes' + Model
+        precisionSaveRoot = saveFolder + 'graphs/precision/' + Model + '/compare_classes' + Model
+        recallSaveRoot = saveFolder + 'graphs/recall/' + Model + '/compare_classes' + Model
 
         # Create precision graph
-        self.createErrorPlots(xPlots=[xPrecision], yPlots=[ySortedPrecisionMean], yErrList = [ySortedPrecisionErr], xAxisName = 'Class', yAxisName = 'Precision (%)', title = 'Precision against Class (' + Model + ')', FileName = saveRoot + '_precision.png')
+        self.createPlots(xPlots=[xPrecision], yPlots=[ySortedPrecisionMean], yErrList = [ySortedPrecisionErr], xAxisName = 'Class', yAxisName = 'Precision (%)', title = 'Precision against Class (' + Model + ')', fileName = precisionSaveRoot + '_precision.png')
                
         # Create recall graph
-        self.createErrorPlots(xPlots=[xRecall], yPlots=[ySortedRecallMean], yErrList = [ySortedRecallErr], xAxisName = 'Class', yAxisName = 'Recall (%)', title = 'Recall against Class (' + Model + ')', FileName = saveRoot + '_recall.png')
+        self.createPlots(xPlots=[xRecall], yPlots=[ySortedRecallMean], yErrList = [ySortedRecallErr], xAxisName = 'Class', yAxisName = 'Recall (%)', title = 'Recall against Class (' + Model + ')', fileName = recallSaveRoot + '_recall.png')
         
         if minimum > 0:
             # Create filtered precision graph
@@ -426,7 +474,7 @@ class Experiments:
                     xFiltered.append(x[i])
                     yFilteredPrecisionMean.append(ySortedPrecisionMean[i])
                     yFilteredPrecisionErr.append(ySortedPrecisionErr[i])
-            self.createErrorPlots(xPlots=[xFiltered], yPlots=[yFilteredPrecisionMean], yErrList = [yFilteredPrecisionErr], xAxisName = 'Class', yAxisName = 'Precision (%)', title = 'Precision against Class (' + Model + ')', FileName = saveRoot + '_precision_Filtered.png')
+            self.createPlots(xPlots=[xFiltered], yPlots=[yFilteredPrecisionMean], yErrList = [yFilteredPrecisionErr], xAxisName = 'Class', yAxisName = 'Precision (%)', title = 'Precision (filtered) against Class (' + Model + ')', fileName = precisionSaveRoot + '_precision_Filtered.png')
         
             # Create filtered recall graph
             xFiltered = []
@@ -438,7 +486,7 @@ class Experiments:
                     xFiltered.append(x[i])
                     yFilteredRecallMean.append(ySortedRecallMean[i])
                     yFilteredRecallErr.append(ySortedRecallErr[i])
-            self.createErrorPlots(xPlots=[xFiltered], yPlots=[yFilteredRecallMean], yErrList = [yFilteredRecallErr], xAxisName = 'Class', yAxisName = 'Recall (%)', title = 'Recall against Class (' + Model + ')', FileName = saveRoot + '_recall_Filtered.png')
+            self.createPlots(xPlots=[xFiltered], yPlots=[yFilteredRecallMean], yErrList = [yFilteredRecallErr], xAxisName = 'Class', yAxisName = 'Recall (%)', title = 'Recall (filtered) against Class (' + Model + ')', fileName = recallSaveRoot + '_recall_Filtered.png')
         return
     
     def printClassParameterReports(self, Model, Parameter, Bounds = [], loadFolder = '', saveFolder = 'results/', classList = []):
@@ -532,22 +580,24 @@ class Experiments:
         yFilteredPrecisionErr = [np.std(i) * 100 for i in yFilteredPrecision]
         yFilteredRecallErr = [np.std(i) * 100 for i in yFilteredRecall]
 
-        saveRoot = saveFolder + 'graphs/class_parameter_' + Model + '_' + Parameter
+        precisionSaveRoot = saveFolder + 'graphs/precision/' + Model + '/class_parameter_' + Model + '_' + Parameter
+        recallSaveRoot = saveFolder + 'graphs/recall/' + Model + '/class_parameter_' + Model + '_' + Parameter
         for Bound in Bounds:
-            saveRoot += '_' + Bound
+            precisionSaveRoot += '_' + Bound
+            recallSaveRoot += '_' + Bound
 
         # Create precision graph
-        self.createErrorPlots(xPlots=[x], yPlots=[yPrecisionMean], yErrList = [yPrecisionErr], xAxisName = Parameter, yAxisName = 'Precision (%)', title = 'Precision against ' + Parameter + ' (' + Model + ')', FileName = saveRoot + '_precision.png')
+        self.createPlots(xPlots=[x], yPlots=[yPrecisionMean], yErrList = [yPrecisionErr], xAxisName = Parameter, yAxisName = 'Precision (%)', title = 'Precision against ' + Parameter + ' (' + Model + ')', fileName = precisionSaveRoot + '_precision.png')
             
         # Create recall graph
-        self.createErrorPlots(xPlots=[x], yPlots=[yRecallMean], yErrList = [yRecallErr], xAxisName = Parameter, yAxisName = 'Recall (%)', title = 'Recall against ' + Parameter + ' (' + Model + ')', FileName = saveRoot + '_recall.png')
+        self.createPlots(xPlots=[x], yPlots=[yRecallMean], yErrList = [yRecallErr], xAxisName = Parameter, yAxisName = 'Recall (%)', title = 'Recall against ' + Parameter + ' (' + Model + ')', fileName = recallSaveRoot + '_recall.png')
             
         if len(classList) > 0:     
             # Create filtered precision graph 
-            self.createErrorPlots(xPlots=[xFiltered], yPlots=[yFilteredPrecisionMean], yErrList = [yFilteredPrecisionErr], xAxisName = Parameter, yAxisName = 'Precision (%)', title = 'Precision (filtered) against ' + Parameter + ' (' + Model + ')', FileName = saveRoot + '_precision_filtered.png')
+            self.createPlots(xPlots=[xFiltered], yPlots=[yFilteredPrecisionMean], yErrList = [yFilteredPrecisionErr], xAxisName = Parameter, yAxisName = 'Precision (%)', title = 'Precision (filtered) against ' + Parameter + ' (' + Model + ')', fileName = precisionSaveRoot + '_precision_filtered.png')
             
             # Create filtered recall graph
-            self.createErrorPlots(xPlots=[xFiltered], yPlots=[yFilteredRecallMean], yErrList = [yFilteredRecallErr], xAxisName = Parameter, yAxisName = 'Recall (%)', title = 'Recall (filtered) against ' + Parameter + ' (' + Model + ')', FileName = saveRoot + '_recall_filtered.png')
+            self.createPlots(xPlots=[xFiltered], yPlots=[yFilteredRecallMean], yErrList = [yFilteredRecallErr], xAxisName = Parameter, yAxisName = 'Recall (%)', title = 'Recall (filtered) against ' + Parameter + ' (' + Model + ')', fileName = recallSaveRoot + '_recall_filtered.png')
             
         return
     
@@ -558,7 +608,7 @@ class Experiments:
                     with open(directoryPath + '/' + pickleFile, 'rb') as pikl:
                         ResultsList.append(pickle.load(pikl))
     
-    def createErrorPlots(self, xPlots, yPlots, xLabelsList = [], yErrList = [], plotLabels=[], xAxisName = '', yAxisName = '', title = '', FileName = ''):
+    def createPlots(self, xPlots, yPlots, yErrList = [], plotLabels=[], xAxisName = '', yAxisName = '', legendTitle='', title = '', fileName = '', scatter=False):
         
         rotation = 'horizontal'
         logscale = False
@@ -570,44 +620,93 @@ class Experiments:
                 break
 
         for xPlot in xPlots:
-            if type(xPlot[0]) is not str:
-                if max(xPlot) / min(min(xPlot),1) >= 100:
+            if type(xPlot[0]) is not str and len(xPlots) == 1 and min(xPlot) > 0:
+                if max(xPlot) / min(xPlot) >= 100:
                     logscale = True
                     break
             else:
                 xText = True
-                break            
+                break     
+
+        scatterShapes = ['o','s','D','v','^','h','p','d','<','>']
+        colors = {} 
+        colors['Maroon'] = '#800000'
+        colors['Red'] = '#e6194B'
+        colors['Orange'] = '#f58231'
+        colors['Yellow'] = '#ffe119'
+        colors['Green'] = '#bfef45'
+        colors['Mint'] = '#aaffc3'
+        colors['Cyan'] = '#42d4f4'
+        colors['Blue'] = '#4363d8'
+        colors['Navy'] = '#000075'
+        colors['Black'] = '#000000'
+        edgecolors = ['#000000']
+        if len(plotLabels) == 0:
+            edgecolors = [colors['Blue']]
+        elif len(plotLabels) == 2:
+            edgecolors = [colors['Red'],colors['Blue']]
+        elif len(plotLabels) == 3:
+            edgecolors = [colors['Red'],colors['Yellow'],colors['Blue']]
+        elif len(plotLabels) == 4:
+            edgecolors = [colors['Red'],colors['Yellow'],colors['Green'],colors['Blue']]
+        elif len(plotLabels) == 5:
+            edgecolors = [colors['Red'],colors['Orange'],colors['Yellow'],colors['Green'],colors['Blue']]
+        elif len(plotLabels) == 6:
+            edgecolors = [colors['Red'],colors['Orange'],colors['Yellow'],colors['Green'],colors['Mint'],colors['Blue']]
+        elif len(plotLabels) == 7:
+            edgecolors = [colors['Red'],colors['Orange'],colors['Yellow'],colors['Green'],colors['Mint'],colors['Cyan'],colors['Blue']]
+        elif len(plotLabels) == 8:
+            edgecolors = [colors['Maroon'],colors['Red'],colors['Orange'],colors['Yellow'],colors['Green'],colors['Mint'],colors['Cyan'],colors['Blue']]
+        elif len(plotLabels) == 9:
+            edgecolors = [colors['Maroon'],colors['Red'],colors['Orange'],colors['Yellow'],colors['Green'],colors['Mint'],colors['Cyan'],colors['Blue'],colors['Navy']]
+        elif len(plotLabels) == 10:
+            edgecolors = [colors['Maroon'],colors['Red'],colors['Orange'],colors['Yellow'],colors['Green'],colors['Mint'],colors['Cyan'],colors['Blue'],colors['Navy'],colors['Black']]
+        else:
+            print('There must be between two and ten plot labels')
+            return
 
         plt.figure()   
+        plt.ylim(0,105)
         if len(plotLabels) == 0:
-            plt.errorbar(xPlots[0], yPlots[0], yerr=yErrList[0], fmt='bo', capsize=5)
+            if scatter == True:
+                if logscale == True:
+                    plt.scatter([math.log(i) for i in xPlots[0]], yPlots[0], alpha=0.6, marker=scatterShapes[0])
+                else:
+                    plt.scatter(xPlots[0], yPlots[0], alpha=0.6, marker=scatterShapes[0])
+            else:
+                if logscale == True:
+                    plt.errorbar([math.log(i) for i in xPlots[0]], yPlots[0], yerr=yErrList[0], fmt='bo', capsize=5)
+                else:
+                    plt.errorbar(xPlots[0], yPlots[0], yerr=yErrList[0], fmt='bo', capsize=5)
         else:
             for i in range(0,len(plotLabels)):
-                plt.errorbar(xPlots[i], yPlots[i], yerr=yErrList[i], fmt='bo', capsize=5, label=plotLabels[i])
-            plt.legend()
+                if scatter == True:
+                    plt.scatter(xPlots[i], yPlots[i], label=plotLabels[i], marker=scatterShapes[i], edgecolors=edgecolors[i], facecolors='none',alpha=0.6)
+                else:
+                    plt.errorbar(xPlots[i], yPlots[i], yerr=yErrList[i], fmt='bo', capsize=5, label=plotLabels[i])
+            plt.legend(title=legendTitle)
         if logscale == True:
-            xLabels = plt.xticks()
-            xTicks = [math.log(i) for i in xTicks]
-            plt.xticks(ticks=xTicks, labels=xLabels, rotation=rotation)
-        elif xText == True:             
+            plt.xticks(ticks=[math.log(i) for i in xPlots[0]],labels=xPlots[0],rotation=rotation)
+        elif xText == True:     
             plt.xticks(rotation='vertical', fontsize=8)
-            plt.subplots_adjust(bottom=0.2)
+            plt.subplots_adjust(bottom=0.3)
         else:
-            plt.xticks(rotation=rotation)
+            plt.xticks(ticks=xPlots[0],labels=xPlots[0],rotation=rotation)
+        if rotation == 'vertical':
+            plt.subplots_adjust(bottom=0.3)
         plt.xlabel(xAxisName)
-        plt.ylabel(yAxisName)        
+        plt.ylabel(yAxisName)  
         plt.grid(b=True, which='major', color='#666666', linestyle='-')
-        plt.grid(b=True, which='minor', color='#999999', linestyle='-', alpha=0.3)
         plt.title(title)
 
         createFilePath = ''
-        for folder in FileName.split('/'):
+        for folder in fileName.split('/'):
             if folder != '' and '.png' not in folder:
                 createFilePath += folder + '/'
                 if not os.path.exists(createFilePath):
                     os.mkdir(createFilePath)
 
-        plt.savefig(FileName)
+        plt.savefig(fileName)
 
         for i in plt.get_fignums():
             plt.close(i)
