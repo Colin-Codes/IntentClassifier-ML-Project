@@ -131,15 +131,21 @@ class Experiments:
         print(classReportDict)
 
     def printSentenceLengths(self):
+        
+        if not os.path.exists('data'):
+            os.mkdir('data')
+        
+        if not os.path.exists('data/graphs'):
+            os.mkdir('data/graphs')
 
         for _, _, files in os.walk('data/'):
             for csvFile in files:
                 if '.csv' in csvFile:
                     with open('data/' + csvFile, "r") as importTrainCSV:
-                        samples = [i[1:2].split(' ') for i in list(csv.reader(importTrainCSV))[1:]]
-                        counts = [len(i) for i in samples]
+                        samples = [i[1:2] for i in list(csv.reader(importTrainCSV))[1:]]
+                        counts = [len(i[0].split(' ')) for i in samples]
                         plt.figure()
-                        plt.hist(counts, facecolor='blue', alpha=0.5)
+                        plt.hist(counts, facecolor='blue', alpha=0.5, bins=30)
                         plt.xlabel('Sentence lengths')
                         plt.ylabel('Occurence')
                         plt.title('Histogram of sentence lengths in dataset: ' + csvFile)
@@ -389,7 +395,7 @@ class Experiments:
             self.createPlots(xPlots=xFilteredLabels, yPlots=yFilteredRecallMean, yErrList = yFilteredRecallErr, plotLabels=plotLabels, xAxisName = 'Class', yAxisName = 'Recall (%)', legendTitle=titleExtension.replace('by ',''), title = 'Recall against Class (filtered) ' + titleExtension, fileName = recallSaveRoot + '_recall_filtered.png')
         return
 
-    def printCompareClasses(self, Model, minimum=0.5, loadFolders = ['results/'], saveFolder='results/Global/'):
+    def printCompareClasses(self, Model, minimum=50, loadFolders = ['results/'], saveFolder='results/Global/'):
         if saveFolder[-1] != '/':
             saveFolder += '/'
 
@@ -471,7 +477,7 @@ class Experiments:
 
             for i in range(0,len(x)):
                 if (ySortedPrecisionMean[i] + ySortedPrecisionErr[i]) > minimum:
-                    xFiltered.append(x[i])
+                    xFiltered.append(xPrecision[i])
                     yFilteredPrecisionMean.append(ySortedPrecisionMean[i])
                     yFilteredPrecisionErr.append(ySortedPrecisionErr[i])
             self.createPlots(xPlots=[xFiltered], yPlots=[yFilteredPrecisionMean], yErrList = [yFilteredPrecisionErr], xAxisName = 'Class', yAxisName = 'Precision (%)', title = 'Precision (filtered) against Class (' + Model + ')', fileName = precisionSaveRoot + '_precision_Filtered.png')
@@ -483,13 +489,13 @@ class Experiments:
 
             for i in range(0,len(x)):
                 if (ySortedRecallMean[i] + ySortedRecallErr[i]) > minimum:
-                    xFiltered.append(x[i])
+                    xFiltered.append(xRecall[i])
                     yFilteredRecallMean.append(ySortedRecallMean[i])
                     yFilteredRecallErr.append(ySortedRecallErr[i])
             self.createPlots(xPlots=[xFiltered], yPlots=[yFilteredRecallMean], yErrList = [yFilteredRecallErr], xAxisName = 'Class', yAxisName = 'Recall (%)', title = 'Recall (filtered) against Class (' + Model + ')', fileName = recallSaveRoot + '_recall_Filtered.png')
         return
     
-    def printClassParameterReports(self, Model, Parameter, Bounds = [], loadFolder = '', saveFolder = 'results/', classList = []):
+    def printParameterReports(self, Model, Parameter, Bounds = [], loadFolder = '', saveFolder = 'results/', classList = []):
         if loadFolder == '':
             loadFolder = saveFolder
             
@@ -580,8 +586,8 @@ class Experiments:
         yFilteredPrecisionErr = [np.std(i) * 100 for i in yFilteredPrecision]
         yFilteredRecallErr = [np.std(i) * 100 for i in yFilteredRecall]
 
-        precisionSaveRoot = saveFolder + 'graphs/precision/' + Model + '/class_parameter_' + Model + '_' + Parameter
-        recallSaveRoot = saveFolder + 'graphs/recall/' + Model + '/class_parameter_' + Model + '_' + Parameter
+        precisionSaveRoot = saveFolder + 'graphs/precision/' + Model + '/parameterReport_' + Model + '_' + Parameter
+        recallSaveRoot = saveFolder + 'graphs/recall/' + Model + '/parameterReport_' + Model + '_' + Parameter
         for Bound in Bounds:
             precisionSaveRoot += '_' + Bound
             recallSaveRoot += '_' + Bound
