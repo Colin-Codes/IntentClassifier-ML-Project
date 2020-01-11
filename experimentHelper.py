@@ -661,7 +661,7 @@ class Experiments:
         elif len(plotLabels) == 10:
             edgecolors = [colors['Maroon'],colors['Red'],colors['Orange'],colors['Yellow'],colors['Green'],colors['Mint'],colors['Cyan'],colors['Blue'],colors['Navy'],colors['Black']]
         else:
-            print('There must be between two and ten plot labels')
+            print('There must be between two and ten plot labels: "' + title + '"')
             return
 
         plt.figure()   

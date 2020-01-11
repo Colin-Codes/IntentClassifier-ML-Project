@@ -3,6 +3,7 @@ from experimentHelper import Experiments
 import copy
 
 experiments = []
+testRun = Experiments(experiments)
 # Examples
 # experiments.append(Experiment(_modelName="RNN", _kFolds=1, _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=30, threshold = 0.0, _trainFilePath='data/trainingSet_augmented.csv', _testFilePath='data/testSet.csv'))
 # experiments.append(Experiment(_modelName="GRU", _kFolds=1, _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=30, threshold = 0.0, _trainFilePath='data/trainingSet_augmented.csv', _testFilePath='data/testSet.csv'))
@@ -15,8 +16,8 @@ experiments = []
 # testRun = Experiments(experiments)
 # testRun.printSentenceLengths()
 
-testRun = Experiments(experiments)
-testRun.printClassDistributions()
+# testRun = Experiments(experiments)
+# testRun.printClassDistributions()
 
 # # Neural Network exploratory experiment
 # for i in range(0, 30):
@@ -162,7 +163,7 @@ augmentedTrainFilePath='data/trainingSet_augmented.csv'
 
 #region Compare classes
 
-# Compare class results to determine dead classes
+# # Compare class results to determine dead classes
 # testRun = Experiments(experiments)
 # for i in ('RNN','GRU','LSTM'):
 #     testRun.printCompareClasses(i, loadFolders=['results/Augmented/Dimensions','results/Augmented/EpochsBatchSize','results/Augmented/SentenceSize'], saveFolder='results/Augmented/CompareClasses')
@@ -411,7 +412,7 @@ saveFolder= balancedSaveFolder + 'SentenceSize/'
 
 #region Compare classes
 
-# Compare class results to determine dead classes
+# # Compare class results to determine dead classes
 # testRun = Experiments(experiments)
 # for i in ('RNN','GRU','LSTM'):
 #     testRun.printCompareClasses(i, loadFolders=['results/Balanced/Dimensions','results/Balanced/EpochsBatchSize','results/Balanced/SentenceSize'], saveFolder='results/Balanced/CompareClasses')
@@ -664,7 +665,7 @@ originalTrainFilePath='data/trainingSet.csv'
 
 #region Compare classes
 
-# Compare class results to determine dead classes
+# # Compare class results to determine dead classes
 # testRun = Experiments(experiments)
 # for i in ('RNN','GRU','LSTM'):
 #     testRun.printCompareClasses(i, loadFolders=['results/Original/Dimensions','results/Original/EpochsBatchSize','results/Original/SentenceSize'], saveFolder='results/Original/CompareClasses')
@@ -696,7 +697,7 @@ GRUOriginalLiveClasses = ['Colour','Status','EqualGlass','Leaver','Feedback','Ga
 # testRun.printParameterReports('LSTM', 'embeddedDims', saveFolder='results/Original/Dimensions/', classList=LSTMOriginalLiveClasses)
 # testRun.printParameterReports('GRU', 'embeddedDims', saveFolder='results/Original/Dimensions/', classList=GRUOriginalLiveClasses)
 
-# # Neural Network Epochs - Batch Size results
+# Neural Network Epochs - Batch Size results
 # testRun = Experiments(experiments)
 # for j in ('epochs','batchSize'):
 #     testRun.printParameterReports('RNN', j,saveFolder='results/Original/EpochsBatchSize/',classList=RNNOriginalLiveClasses)
@@ -786,9 +787,43 @@ GRUOriginalParams = Experiment(_modelName='GRU', _kFolds=1, _embeddedDims=60, _e
 ### Optimised final results ###
 ###############################
 
-# Double check optimised values, fill in params lists below, check q referenced throughout
+#region re-print parameter comparison charts if necessary
 
-# Run through once to gauge running time, then run through multiple times
+# variations = {
+#     "epochs" : [],
+#     "batchSize" : [],
+#     "embeddedDims" : [[10,50,100,300,600,800],[10,20,30,40,50],[60,70,80,90,100],[100,200,300,400,500],[500,600,700,800]],
+#     "sentenceSize" : [[5,15,20,25],[5,6,7,8,9],[10,11,12,13,14],[15,16,17,18,19],[20,21,22,23,24,25]],
+#     "threshold" : [],
+#     "embeddingMode" : [],
+#     "nNeighbours" : [[1,5,10,50,100,500,1000],[1,2,3,4,5,6,7,8,9],[10,11,12,13,14,15],[10,20,30,40,50],[60,70,80,90,100],[100,200,300,400,500],[600,700,800,900,1000]]
+#     }
+# for dataset in [originalSaveFolder,balancedSaveFolder,augmentedSaveFolder]:
+#     for parameter in ['epochs','batchSize','embeddedDims','sentenceSize','threshold']:
+#         for model in['RNN','LSTM','GRU']:
+#             saveFolder = dataset + parameter + '/'
+#             if parameter == 'epochs' or parameter == 'batchSize':
+#                 saveFolder = dataset + 'EpochsBatchSize/'
+#             if parameter == 'embeddedDims':
+#                 saveFolder = dataset + 'Dimensions/'
+#             if len(variations[parameter]) == 0:
+#                 testRun.printCompareParameterClasses(model, parameter=parameter, saveFolder=saveFolder)
+#             for variation in variations[parameter]:
+#                 testRun.printCompareParameterClasses(model, parameter=parameter, parameterValues=variation, saveFolder=saveFolder)
+#     for parameter in ['embeddingMode','nNeighbours','threshold']:
+#         if parameter == 'threshold':
+#             saveFolder = dataset + 'threshold/'
+#         else:
+#             saveFolder = dataset + 'KNN/'
+#         if len(variations[parameter]) == 0:
+#             testRun.printCompareParameterClasses('KNN', parameter=parameter, saveFolder=saveFolder)
+#         for variation in variations[parameter]:
+#             testRun.printCompareParameterClasses('KNN', parameter=parameter, parameterValues=variation, saveFolder=saveFolder)
+
+#endregion
+
+#region Repeat optimised experiments up to 30 times
+
 RNNAugmentedParams = Experiment(_modelName='RNN', _kFolds=1, _embeddedDims=100, _epochs=3, _batchSize = 64, _sentenceSize=6, threshold = 0.9, _trainFilePath=augmentedTrainFilePath, _testFilePath='data/testSet.csv')
 LSTMAugmentedParams = Experiment(_modelName='LSTM', _kFolds=1, _embeddedDims=90, _epochs=3, _batchSize = 64, _sentenceSize=18, threshold = 0.9, _trainFilePath=augmentedTrainFilePath, _testFilePath='data/testSet.csv')
 GRUAugmentedParams = Experiment(_modelName='GRU', _kFolds=1, _embeddedDims=100, _epochs=3, _batchSize = 64, _sentenceSize=21, threshold = 0.9, _trainFilePath=augmentedTrainFilePath, _testFilePath='data/testSet.csv')
@@ -806,37 +841,17 @@ LSTMParams = [LSTMOriginalParams, LSTMBalancedParams, LSTMAugmentedParams]
 GRUParams = [GRUOriginalParams, GRUBalancedParams, GRUAugmentedParams]
 ParamsList = [RNNParams,LSTMParams,GRUParams]
 
-for i in range(0, 17):
-    for q in range(0,len(saveFolder)):
-        for Params in ParamsList:
-            modelParams = copy.deepcopy(Params[q])
-            experiments = []
-            print('Experiment: ' + str(i + 1) + ' Model: ' + modelParams.modelName + ' Dimensions: ' + str(modelParams.embeddedDims) + ' Epochs: ' + str(modelParams.epochs) + ' Batch: ' + str(modelParams.batchSize) + ' Sentence Size: ' + str(modelParams.sentenceSize) + ' Threshold: ' + str(modelParams.threshold) + ' Dataset: ' + modelParams.trainFilePath)
-            experiments.append(Experiment(_modelName=modelParams.modelName, _kFolds=1, _embeddedDims=modelParams.embeddedDims, _epochs=modelParams.epochs, _batchSize = modelParams.batchSize, _sentenceSize=modelParams.sentenceSize, threshold = modelParams.threshold, _trainFilePath=modelParams.trainFilePath, _testFilePath='data/testSet.csv'))
-            testRun = Experiments(experiments)
-            testRun.run()
-            testRun.printClassResults(saveFolder=saveFolder[q])
-            testRun = Experiments(experiments)
-
-for i in range(0, 1):
-    for modelParams in [LSTMBalancedParams, GRUBalancedParams]:
-        experiments = []
-        print('Experiment: ' + str(i + 1) + ' Model: ' + modelParams.modelName + ' Dimensions: ' + str(modelParams.embeddedDims) + ' Epochs: ' + str(modelParams.epochs) + ' Batch: ' + str(modelParams.batchSize) + ' Sentence Size: ' + str(modelParams.sentenceSize) + ' Threshold: ' + str(modelParams.threshold) + ' Dataset: ' + modelParams.trainFilePath)
-        experiments.append(Experiment(_modelName=modelParams.modelName, _kFolds=1, _embeddedDims=modelParams.embeddedDims, _epochs=modelParams.epochs, _batchSize = modelParams.batchSize, _sentenceSize=modelParams.sentenceSize, threshold = modelParams.threshold, _trainFilePath=modelParams.trainFilePath, _testFilePath='data/testSet.csv'))
-        testRun = Experiments(experiments)
-        testRun.run()
-        testRun.printClassResults(saveFolder=balancedSaveFolder)
-        testRun = Experiments(experiments)
-
-for i in range(0, 1):
-    for modelParams in [RNNAugmentedParams, LSTMAugmentedParams, GRUAugmentedParams]:
-        experiments = []
-        print('Experiment: ' + str(i + 1) + ' Model: ' + modelParams.modelName + ' Dimensions: ' + str(modelParams.embeddedDims) + ' Epochs: ' + str(modelParams.epochs) + ' Batch: ' + str(modelParams.batchSize) + ' Sentence Size: ' + str(modelParams.sentenceSize) + ' Threshold: ' + str(modelParams.threshold) + ' Dataset: ' + modelParams.trainFilePath)
-        experiments.append(Experiment(_modelName=modelParams.modelName, _kFolds=1, _embeddedDims=modelParams.embeddedDims, _epochs=modelParams.epochs, _batchSize = modelParams.batchSize, _sentenceSize=modelParams.sentenceSize, threshold = modelParams.threshold, _trainFilePath=modelParams.trainFilePath, _testFilePath='data/testSet.csv'))
-        testRun = Experiments(experiments)
-        testRun.run()
-        testRun.printClassResults(saveFolder=augmentedSaveFolder)
-        testRun = Experiments(experiments)
+# for i in range(0, 30):
+#     for q in range(0,len(saveFolder)):
+#         for Params in ParamsList:
+#             modelParams = copy.deepcopy(Params[q])
+#             experiments = []
+#             print('Experiment: ' + str(i + 1) + ' Model: ' + modelParams.modelName + ' Dimensions: ' + str(modelParams.embeddedDims) + ' Epochs: ' + str(modelParams.epochs) + ' Batch: ' + str(modelParams.batchSize) + ' Sentence Size: ' + str(modelParams.sentenceSize) + ' Threshold: ' + str(modelParams.threshold) + ' Dataset: ' + modelParams.trainFilePath)
+#             experiments.append(Experiment(_modelName=modelParams.modelName, _kFolds=1, _embeddedDims=modelParams.embeddedDims, _epochs=modelParams.epochs, _batchSize = modelParams.batchSize, _sentenceSize=modelParams.sentenceSize, threshold = modelParams.threshold, _trainFilePath=modelParams.trainFilePath, _testFilePath='data/testSet.csv'))
+#             testRun = Experiments(experiments)
+#             testRun.run()
+#             testRun.printClassResults(saveFolder=saveFolder[q])
+#             testRun = Experiments(experiments)
 
 KNNAugmentedParams = Experiment(_modelName='KNN', _kFolds=1, _nNeighbours=10, _embeddingMode='TFIDF', threshold = 0.9, _trainFilePath=augmentedTrainFilePath, _testFilePath='data/testSet.csv')
 KNNBalancedParams = Experiment(_modelName='KNN', _kFolds=1, _nNeighbours=9, _embeddingMode='TFIDF', threshold = 0.9, _trainFilePath=balancedTrainFilePath, _testFilePath='data/testSet.csv')
@@ -853,29 +868,27 @@ KNNParams = [[KNNAugmentedParams,augmentedSaveFolder + 'Optimal/'],[KNNBalancedP
 #         testRun.run()
 #         testRun.printClassResults(saveFolder=ModelFolder)
 
-ModelList = [['KNN'],['RNN'],['LSTM'],['GRU']]
-# experiments = []
-# testRun = Experiments(experiments)
-# Graph augmented models against eachother
-augmentedLoadFolder = augmentedSaveFolder + 'Optimal/'
-augmentedLoadFolders = [augmentedLoadFolder,augmentedLoadFolder,augmentedLoadFolder,augmentedLoadFolder]
-testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=augmentedLoadFolders, saveFolder=augmentedLoadFolder)
+# ModelList = [['KNN'],['RNN'],['LSTM'],['GRU']]
+# # experiments = []
+# # testRun = Experiments(experiments)
+# # Graph augmented models against eachother
+# augmentedLoadFolder = augmentedSaveFolder + 'Optimal/'
+# augmentedLoadFolders = [augmentedLoadFolder,augmentedLoadFolder,augmentedLoadFolder,augmentedLoadFolder]
+# testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=augmentedLoadFolders, saveFolder=augmentedLoadFolder)
 
-# Graph balanced models against eachother
-balancedLoadFolder = balancedSaveFolder + 'Optimal/'
-balancedLoadFolders = [balancedLoadFolder,balancedLoadFolder,balancedLoadFolder,balancedLoadFolder]
-testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=balancedLoadFolders, saveFolder=balancedLoadFolder)
+# # Graph balanced models against eachother
+# balancedLoadFolder = balancedSaveFolder + 'Optimal/'
+# balancedLoadFolders = [balancedLoadFolder,balancedLoadFolder,balancedLoadFolder,balancedLoadFolder]
+# testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=balancedLoadFolders, saveFolder=balancedLoadFolder)
 
-# Graph original models against eachother
-originalLoadFolder = originalSaveFolder + 'Optimal/'
-originalLoadFolders = [originalLoadFolder,originalLoadFolder,originalLoadFolder,originalLoadFolder]
-testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=originalLoadFolders, saveFolder=originalLoadFolder)
+# # Graph original models against eachother
+# originalLoadFolder = originalSaveFolder + 'Optimal/'
+# originalLoadFolders = [originalLoadFolder,originalLoadFolder,originalLoadFolder,originalLoadFolder]
+# testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=originalLoadFolders, saveFolder=originalLoadFolder)
 
-# Graph models against eachother across datasets
-for Model in [['KNN'],['RNN'],['LSTM'],['GRU']]:
-    overallLoadFolders = [originalLoadFolder,balancedLoadFolder,augmentedLoadFolder]
-    testRun.printCompareExperimentsClasses(ModelsList=[Model,Model,Model], loadFolders=overallLoadFolders, saveFolder='results/Global')
+# # Graph models against eachother across datasets
+# for Model in [['KNN'],['RNN'],['LSTM'],['GRU']]:
+#     overallLoadFolders = [originalLoadFolder,balancedLoadFolder,augmentedLoadFolder]
+#     testRun.printCompareExperimentsClasses(ModelsList=[Model,Model,Model], loadFolders=overallLoadFolders, saveFolder='results/Global')
 
-
-
-    # Decide on a dataset, decide on a model / threshold
+#endregion
