@@ -14,7 +14,7 @@ X = originalSet['Email']
 y = originalSet['Class']
 print("Original class distribution: \n" + str(data.classDistribution()))
 
-# Split data across test (80%) and train (20%)
+# Split data across train (80%) and test (20%)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=0, stratify=y)
 testSet = pd.DataFrame(list(zip(y_test, X_test)), columns=['Class','Email'])
 trainingSet = pd.DataFrame(list(zip(y_train, X_train)), columns=['Class','Email'])

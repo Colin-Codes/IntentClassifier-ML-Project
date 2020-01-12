@@ -874,48 +874,47 @@ KNNParams = [[KNNAugmentedParams,augmentedSaveFolder + 'Optimal/'],[KNNBalancedP
 #         testRun.run()
 #         testRun.printClassResults(saveFolder=ModelFolder)
 
-# ModelList = [['KNN'],['RNN'],['LSTM'],['GRU']]
-# # experiments = []
-# # testRun = Experiments(experiments)
-# # Graph augmented models against eachother
-# augmentedLoadFolder = augmentedSaveFolder + 'Optimal/'
-# augmentedLoadFolders = [augmentedLoadFolder,augmentedLoadFolder,augmentedLoadFolder,augmentedLoadFolder]
-# testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=augmentedLoadFolders, saveFolder=augmentedLoadFolder)
+ModelList = [['KNN'],['RNN'],['LSTM'],['GRU']]
+# experiments = []
+# testRun = Experiments(experiments)
+# Graph augmented models against eachother
+augmentedLoadFolder = augmentedSaveFolder + 'Optimal/'
+augmentedLoadFolders = [augmentedLoadFolder,augmentedLoadFolder,augmentedLoadFolder,augmentedLoadFolder]
+testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=augmentedLoadFolders, saveFolder=augmentedLoadFolder)
 
-# # Graph balanced models against eachother
-# balancedLoadFolder = balancedSaveFolder + 'Optimal/'
-# balancedLoadFolders = [balancedLoadFolder,balancedLoadFolder,balancedLoadFolder,balancedLoadFolder]
-# testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=balancedLoadFolders, saveFolder=balancedLoadFolder)
+# Graph balanced models against eachother
+balancedLoadFolder = balancedSaveFolder + 'Optimal/'
+balancedLoadFolders = [balancedLoadFolder,balancedLoadFolder,balancedLoadFolder,balancedLoadFolder]
+testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=balancedLoadFolders, saveFolder=balancedLoadFolder)
 
-# # Graph original models against eachother
-# originalLoadFolder = originalSaveFolder + 'Optimal/'
-# originalLoadFolders = [originalLoadFolder,originalLoadFolder,originalLoadFolder,originalLoadFolder]
-# testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=originalLoadFolders, saveFolder=originalLoadFolder)
+# Graph original models against eachother
+originalLoadFolder = originalSaveFolder + 'Optimal/'
+originalLoadFolders = [originalLoadFolder,originalLoadFolder,originalLoadFolder,originalLoadFolder]
+testRun.printCompareExperimentsClasses(ModelsList=ModelList, loadFolders=originalLoadFolders, saveFolder=originalLoadFolder)
 
-# # Graph models against eachother across datasets
-# for Model in [['KNN'],['RNN'],['LSTM'],['GRU']]:
-#     overallLoadFolders = [originalLoadFolder,balancedLoadFolder,augmentedLoadFolder]
-#     testRun.printCompareExperimentsClasses(ModelsList=[Model,Model,Model], loadFolders=overallLoadFolders, saveFolder='results/Global')
+# Graph models against eachother across datasets
+for Model in [['KNN'],['RNN'],['LSTM'],['GRU']]:
+    overallLoadFolders = [originalLoadFolder,balancedLoadFolder,augmentedLoadFolder]
+    testRun.printCompareExperimentsClasses(ModelsList=[Model,Model,Model], loadFolders=overallLoadFolders, saveFolder='results/Global')
 
 #endregion
 
 #region demo experiment
 
-for i in range(0, 1):
-    for model in ['RNN','LSTM','GRU']:
-        experiments = []
-        dimensions = 10
-        epochs = 1
-        batch_size = 64
-        sentence_size = 10
-        threshold = 0.0
-        saveFolder = 'results/demo/'
-        trainFilePath = 'data/trainingSet_augmented'
-        print('Experiment: ' + str(i + 1) + ' Model: ' + model + ' Dimensions: ' + str(dimensions) + ' Epochs: ' + str(epochs) + ' Batch: ' + str(batch_size) + ' Sentence Size: ' + str(sentence_size) + ' Threshold: ' + str(threshold) + ' Dataset: ' + trainFilePath)
-        experiments.append(Experiment(_modelName=model, _kFolds=1, _embeddedDims=dimensions, _epochs=epochs, _batchSize = batch_size, _sentenceSize=sentence_size, threshold = threshold, _trainFilePath=trainFilePath, _testFilePath='data/testSet.csv'))
-        testRun = Experiments(experiments)
-        testRun.run()
-        testRun.printClassResults(saveFolder=saveFolder)
-        testRun.printCompareParameterClasses('model', parameter='threshold', saveFolder=saveFolder)
+
+
+# saveFolder='results/demo/KNN/'
+# # KNN n neighbours and embedding choice
+# Mode='TFIDF'
+# for n in range(1, 4):
+#     print('Model: KNN, Dataset: Balanced, nNeighbours: ' + str(n) + ', Vectorization mode: ' + Mode + ', Dataset: ' + augmentedTrainFilePath)
+#     experiments = []
+#     experiments.append(Experiment(_modelName="KNN", _kFolds=1, _nNeighbours=n, _embeddingMode=Mode, threshold = 0.0, _trainFilePath=augmentedTrainFilePath, _testFilePath='data/testSet.csv'))
+#     testRun = Experiments(experiments)
+#     testRun.run()
+#     testRun.printClassResults(saveFolder=saveFolder)
+# testRun.printParameterReports('KNN', 'nNeighbours',saveFolder=saveFolder,Bounds=[Mode])
+# for variation in [[1,2,3]]:
+#     testRun.printCompareParameterClasses('KNN', parameter='nNeighbours', parameterValues=variation, saveFolder=saveFolder)
 
 #endregion
