@@ -4,7 +4,9 @@ import copy
 
 experiments = []
 testRun = Experiments(experiments)
-# Examples
+
+#region Examples
+
 # experiments.append(Experiment(_modelName="RNN", _kFolds=1, _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=30, threshold = 0.0, _trainFilePath='data/trainingSet_augmented.csv', _testFilePath='data/testSet.csv'))
 # experiments.append(Experiment(_modelName="GRU", _kFolds=1, _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=30, threshold = 0.0, _trainFilePath='data/trainingSet_augmented.csv', _testFilePath='data/testSet.csv'))
 # experiments.append(Experiment(_modelName="LSTM", _kFolds=1, _embeddedDims=300, _epochs=1, _batchSize = 32, _sentenceSize=20, threshold = 0.0, _trainFilePath='data/trainingSet_augmented.csv', _testFilePath='data/testSet.csv'))
@@ -13,13 +15,16 @@ testRun = Experiments(experiments)
 # testRun = Experiments(experiments)
 # testRun.showClassResults('KNN/1_Folds/2_Neighbours/BoW/20191228_120212.pickle')
 
+#endregion
+
 # testRun = Experiments(experiments)
 # testRun.printSentenceLengths()
 
 # testRun = Experiments(experiments)
 # testRun.printClassDistributions()
 
-# # Neural Network exploratory experiment
+#region Neural Network exploratory experiment
+
 # for i in range(0, 30):
 #     print('Experiment: ' + str(i + 1))
 #     experiments = []
@@ -35,6 +40,7 @@ testRun = Experiments(experiments)
 #                         testRun.run()
 #                         testRun.printClassResults(saveFolder='results/Exploratory')
 
+#endregion
 
 ##########################
 ### Augmented dataset ###
@@ -890,5 +896,26 @@ KNNParams = [[KNNAugmentedParams,augmentedSaveFolder + 'Optimal/'],[KNNBalancedP
 # for Model in [['KNN'],['RNN'],['LSTM'],['GRU']]:
 #     overallLoadFolders = [originalLoadFolder,balancedLoadFolder,augmentedLoadFolder]
 #     testRun.printCompareExperimentsClasses(ModelsList=[Model,Model,Model], loadFolders=overallLoadFolders, saveFolder='results/Global')
+
+#endregion
+
+#region demo experiment
+
+for i in range(0, 1):
+    for model in ['RNN','LSTM','GRU']:
+        experiments = []
+        dimensions = 10
+        epochs = 1
+        batch_size = 64
+        sentence_size = 10
+        threshold = 0.0
+        saveFolder = 'results/demo/'
+        trainFilePath = 'data/trainingSet_augmented'
+        print('Experiment: ' + str(i + 1) + ' Model: ' + model + ' Dimensions: ' + str(dimensions) + ' Epochs: ' + str(epochs) + ' Batch: ' + str(batch_size) + ' Sentence Size: ' + str(sentence_size) + ' Threshold: ' + str(threshold) + ' Dataset: ' + trainFilePath)
+        experiments.append(Experiment(_modelName=model, _kFolds=1, _embeddedDims=dimensions, _epochs=epochs, _batchSize = batch_size, _sentenceSize=sentence_size, threshold = threshold, _trainFilePath=trainFilePath, _testFilePath='data/testSet.csv'))
+        testRun = Experiments(experiments)
+        testRun.run()
+        testRun.printClassResults(saveFolder=saveFolder)
+        testRun.printCompareParameterClasses('model', parameter='threshold', saveFolder=saveFolder)
 
 #endregion
